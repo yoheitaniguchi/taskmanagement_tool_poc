@@ -1,4 +1,4 @@
-# taskmanagemet_tool_poc
+# taskmanagement_tool_poc
 
 自分専用のタスク管理ツールのPoC。GTDの流れ（収集 → 明確化 → 整理）と、年 → 四半期のロードマップを、1つのデータでつなぐ。
 開発の指示と方針は [CLAUDE.md](CLAUDE.md) を参照。
