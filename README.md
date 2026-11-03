@@ -11,6 +11,7 @@
 
 | ファイル | 内容 |
 | --- | --- |
+| `docs/proposal.md` | 企画書（発注者が確定した版の写し。レビューの基準） |
 | `CLAUDE.md` | 開発指示書（目的、ゴールの状態、範囲、データモデル、明確化の流れ、画面、技術方針、節目） |
 | `.claude/agents/` | レビュー用のサブエージェント（CLAUDE.md 13章） |
 | `.claude/commands/security-review.md` | `/security-review`（セキュリティレビュー → 回帰テスト → レポート） |
