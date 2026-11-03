@@ -4,7 +4,11 @@
 #
 # 「テストファイルのみ編集可能・本番コードは編集不可」を強制するため、file_pathがテストファイルの
 # 命名規約（*.test.ts / *.test.tsx / *.test.mjs / *.spec.ts）に一致しない場合は無条件でexit 2にする。
+# 判定はファイル名だけで行い、リポジトリの外のパスかどうかは見ていない（PoCでは許容する。既知の制約）。
 set -euo pipefail
+
+# jq が無いと set -e で 127 終了になり、PreToolUse はブロックせずに通してしまう（fail-open）。無ければ拒否する
+command -v jq >/dev/null 2>&1 || { echo "フックの実行に jq が必要です（jq が無いためコマンドを拒否しました）" >&2; exit 2; }
 
 INPUT=$(cat)
 FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')

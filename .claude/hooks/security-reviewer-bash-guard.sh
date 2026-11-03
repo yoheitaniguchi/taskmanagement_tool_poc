@@ -10,6 +10,9 @@
 # PreToolUseのexit 2はツール呼び出しをブロックしてstderrをClaudeへフィードバックする）。
 set -euo pipefail
 
+# jq が無いと set -e で 127 終了になり、PreToolUse はブロックせずに通してしまう（fail-open）。無ければ拒否する
+command -v jq >/dev/null 2>&1 || { echo "フックの実行に jq が必要です（jq が無いためコマンドを拒否しました）" >&2; exit 2; }
+
 INPUT=$(cat)
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 
@@ -37,19 +40,20 @@ if printf '%s' "$COMMAND" | grep -qE '(--output|--ext-diff|--open-files-in-pager
 fi
 
 # tscは出力を書き出さない --noEmit 付きのときだけ許可する
-if printf '%s' "$COMMAND" | grep -qE '^npx tsc' && ! printf '%s' "$COMMAND" | grep -qE -- '--noEmit'; then
-  echo "security-reviewer: npx tsc は --noEmit 付きでのみ許可されています: ${COMMAND}" >&2
+if printf '%s' "$COMMAND" | grep -qE '^npx --no-install tsc' && ! printf '%s' "$COMMAND" | grep -qE -- '--noEmit'; then
+  echo "security-reviewer: npx --no-install tsc は --noEmit 付きでのみ許可されています: ${COMMAND}" >&2
   exit 2
 fi
 
-# 監査・静的解析用途の読み取り専用コマンドのみを許可する
+# 監査・静的解析用途の読み取り専用コマンドのみを許可する。
+# npx は --no-install 付きに限る（未インストールのとき、npmから同名の別パッケージを取ってきて実行するのを防ぐ）
 ALLOW_PATTERNS=(
   '^npm audit( .*)?$'
   '^npm outdated( .*)?$'
   '^npm ls( .*)?$'
   '^npm run lint( .*)?$'
-  '^npx eslint( .*)?$'
-  '^npx tsc( .*)?$'
+  '^npx --no-install eslint( .*)?$'
+  '^npx --no-install tsc( .*)?$'
   '^git log( .*)?$'
   '^git show( .*)?$'
   '^git diff( .*)?$'

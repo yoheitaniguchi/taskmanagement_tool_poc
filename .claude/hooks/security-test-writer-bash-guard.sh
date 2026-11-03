@@ -6,6 +6,9 @@
 # 技術スタックはCLAUDE.md 8.1（React・Vite・TypeScript・Vitest）を前提にしている。
 set -euo pipefail
 
+# jq が無いと set -e で 127 終了になり、PreToolUse はブロックせずに通してしまう（fail-open）。無ければ拒否する
+command -v jq >/dev/null 2>&1 || { echo "フックの実行に jq が必要です（jq が無いためコマンドを拒否しました）" >&2; exit 2; }
+
 INPUT=$(cat)
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 
@@ -18,12 +21,19 @@ if printf '%s' "$COMMAND" | grep -qE '(&&|\|\||;|\||`|\$\(|>|<)' || [[ "$COMMAND
   exit 2
 fi
 
+# tscは出力を書き出さない --noEmit 付きのときだけ許可する
+if printf '%s' "$COMMAND" | grep -qE '^npx --no-install tsc' && ! printf '%s' "$COMMAND" | grep -qE -- '--noEmit'; then
+  echo "security-test-writer: npx --no-install tsc は --noEmit 付きでのみ許可されています: ${COMMAND}" >&2
+  exit 2
+fi
+
+# npx は --no-install 付きに限る（未インストールのとき、npmから同名の別パッケージを取ってきて実行するのを防ぐ）
 ALLOW_PATTERNS=(
   '^npm test( .*)?$'
   '^npm run test:security( .*)?$'
   '^npm run lint( .*)?$'
-  '^npx vitest run( .*)?$'
-  '^npx tsc( .*)?$'
+  '^npx --no-install vitest run( .*)?$'
+  '^npx --no-install tsc( .*)?$'
 )
 
 for pattern in "${ALLOW_PATTERNS[@]}"; do

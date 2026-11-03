@@ -36,7 +36,7 @@ argument-hint: "[--all]"
 ## 4. 実行
 
 `@security`タグ付きのテストを実行する（`package.json`に`test:security`があれば`npm run test:security`、
-無ければ`npx vitest run -t "@security"`）。実行結果（成功/失敗数、失敗したテスト名）をレポートの末尾に追記する。
+無ければ`npx --no-install vitest run -t "@security"`）。実行結果（成功/失敗数、失敗したテスト名）をレポートの末尾に追記する。
 
 ## 5. 判定と報告
 
