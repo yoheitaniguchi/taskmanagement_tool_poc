@@ -17,3 +17,4 @@
 | `docs/change-requests.md` | 範囲外の案・計画の変更の記録（CLAUDE.md 11.2） |
 | `docs/security/checklist.md` | セキュリティレビューの観点の正本 |
 | `docs/templates/` | 節目の資料・振り返りのテンプレート |
+| `docs/reviews/` | 節目のレビュー資料と、CLAUDE.md のレビューの記録 |
