@@ -1,0 +1,36 @@
+# 依存関係の更新提案（CLAUDE.md 8.4、docs/security/checklist.md F）。利用者が1名のため、週1回・まとめて提案する。
+# DependabotのPRも通常のPRと同じくCIと人のレビューを経てマージする（自動マージはしない）。
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    # PoCの間は react のメジャー更新（18 → 19）を提案しない。利点が無く、壊れる危険だけがあるため（既存PoC の判断を踏襲）
+    ignore:
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
+      # PoCの間は typescript のメジャー更新（5 → 7）を提案しない。typescript-eslint が TS 7 に未対応で、
+      # lint（CLAUDE.md 8.3 の安全対策）が動かなくなるため。minor・patch は受ける（既存PoC の判断を踏襲）
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns: ["*"]
