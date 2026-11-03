@@ -1,0 +1,20 @@
+# 依存関係・ビルド成果物
+node_modules/
+dist/
+coverage/
+test-results/
+
+# 秘密情報（値の入っていない見本だけはコミットする。CLAUDE.md 8.3）
+.env*
+!.env.example
+
+# 実データ（CLAUDE.md 8.3。健康・家計・人間関係などの私的な内容を含む）
+# アプリが書き出すJSONは、ファイル名の先頭が必ず「tmpoc-」になる
+tmpoc-*
+exports/
+backup/
+
+# エディタ・OS
+.DS_Store
+.vscode/
+.idea/
