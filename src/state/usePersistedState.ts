@@ -156,6 +156,9 @@ export function usePersistedState() {
 
   const setDeviceName = useCallback((name: string) => updateMeta({ ...metaRef.current, deviceName: name }), [updateMeta]);
 
+  /** 初めて開いたときの説明を閉じる（docs/design.md 3.10。このブラウザの設定に残し、次から出さない） */
+  const dismissIntro = useCallback(() => updateMeta({ ...metaRef.current, introDismissed: true }), [updateMeta]);
+
   /**
    * 「このブラウザの保存データを消去」。この名前空間のキーをすべて消し、画面の状態も空にする（消した後にメモリ上の状態を書き戻さない）。
    * 読み取り専用のタブでは消さない（別のタブが保存した最新のデータを消してしまうため）
@@ -190,6 +193,7 @@ export function usePersistedState() {
     importFile,
     prepareExport,
     setDeviceName,
+    dismissIntro,
     clearSavedData,
     meta,
     // 読めなかった保存データが残っている間は、空の画面の状態と比べても意味が無いので「変更あり」にしない

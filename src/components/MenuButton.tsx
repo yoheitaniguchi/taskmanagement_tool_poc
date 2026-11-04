@@ -6,9 +6,14 @@ import { Icon } from "./Icon";
 interface Props {
   label: string;
   children: ReactNode;
+  /** 開くボタンの中身（省略すると ⋯ のアイコンだけ）とクラス。スマホのタブバーの「メニュー」で使う */
+  trigger?: ReactNode;
+  triggerClassName?: string;
+  /** 外側の要素のクラス */
+  className?: string;
 }
 
-export function MenuButton({ label, children }: Props) {
+export function MenuButton({ label, children, trigger, triggerClassName = "button--icon", className }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -33,10 +38,14 @@ export function MenuButton({ label, children }: Props) {
   }, [open]);
 
   return (
-    <div className="menu" ref={ref}>
-      <button ref={buttonRef} type="button" className="button--icon" aria-expanded={open} onClick={() => setOpen((v) => !v)} title={label}>
-        <Icon name="more" />
-        <span className="visually-hidden">{label}</span>
+    <div className={className ? `menu ${className}` : "menu"} ref={ref}>
+      <button ref={buttonRef} type="button" className={triggerClassName} aria-expanded={open} onClick={() => setOpen((v) => !v)} title={label}>
+        {trigger ?? (
+          <>
+            <Icon name="more" />
+            <span className="visually-hidden">{label}</span>
+          </>
+        )}
       </button>
       {open && (
         // 項目のボタンを押したら閉じる（押した操作自体はそのまま動く）

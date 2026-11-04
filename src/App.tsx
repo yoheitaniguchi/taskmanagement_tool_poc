@@ -1,21 +1,30 @@
-// アプリの外枠（節目2）。保存と受け渡し（PR 2b）までを置く。
-// 収集の入力欄・画面の切替・各画面は PR 3〜5 で足す（docs/plans/milestone-2.md 2章）
+// アプリの外枠（節目2）：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
+// 明確化と置き場の画面は、節目2の続きで足す（docs/plans/milestone-2.md 2章）
 import { useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
+import { CaptureBox } from "./components/CaptureBox";
+import { NavTabs } from "./components/NavTabs";
 import { ClearDialog } from "./components/ClearDialog";
 import { DeviceNameDialog } from "./components/DeviceNameDialog";
 import { ImportDialog } from "./components/ImportDialog";
 import { StorageBanner } from "./components/StorageBanner";
+import { capture } from "./domain/capture";
 import { backupFileName } from "./domain/persistence";
-import { COUNT_LABELS, counts } from "./domain/summaries";
+import { counts } from "./domain/summaries";
 import { downloadText } from "./files";
+import { screenLabel } from "./route";
+import { HomeScreen } from "./screens/HomeScreen";
+import { InboxScreen } from "./screens/InboxScreen";
+import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { usePersistedState } from "./state/usePersistedState";
+import { useRoute } from "./state/useRoute";
 
 type Dialog = null | "import" | "clear" | "rename" | "nameThenExport";
 
 export default function App() {
   const store = usePersistedState();
+  const route = useRoute();
   const [dialog, setDialog] = useState<Dialog>(null);
   const readOnly = store.status.readOnly;
   // 退避は起動時と消去のときにしか変わらない（毎回の描画で大きな値を読まないため）
@@ -48,7 +57,37 @@ export default function App() {
   };
   const unreadableExport = store.status.corrupt !== null && !store.status.recovered ? exportUnreadable : null;
 
-  const c = counts(store.root.state);
+  const state = store.root.state;
+  const c = counts(state);
+  const now = new Date();
+
+  /** 収集の入力欄を使えない理由（入れた内容が保存されないため。docs/design.md 6.3） */
+  const captureBlocked = readOnly
+    ? "このタブは読み取り専用です（別のタブで変更されたため）"
+    : store.status.corrupt !== null && !store.status.recovered
+      ? "保存データを読めなかったため、自動保存を止めています。上の帯の操作で直すと入れられます"
+      : null;
+
+  /** 収集箱に入れる。入れられなければ理由を返す */
+  const onCapture = (text: string): string | null => {
+    const at = new Date();
+    const id = crypto.randomUUID();
+    if (store.dispatch({ type: "capture", text, at: at.toISOString(), id })) return null;
+    // 入れられなかった理由を、同じ関数で確かめ直して示す（読み取り専用になった直後など、関数の外の理由もある）
+    const result = capture(state, text, at, () => id);
+    return result.ok ? "このタブでは入れられません" : result.error;
+  };
+
+  const screen = (() => {
+    switch (route.screen) {
+      case "home":
+        return <HomeScreen counts={c} showIntro={!store.meta.introDismissed} onDismissIntro={store.dismissIntro} />;
+      case "inbox":
+        return <InboxScreen items={state.inbox} now={now} />;
+      default:
+        return <PlaceholderScreen title={screenLabel(route.screen)} />;
+    }
+  })();
 
   return (
     <>
@@ -59,6 +98,7 @@ export default function App() {
         </div>
       )}
       <AppHeader
+        capture={<CaptureBox inboxCount={c.inbox} disabledReason={captureBlocked} onCapture={onCapture} />}
         meta={store.meta}
         changed={store.changed}
         readOnly={readOnly}
@@ -77,15 +117,8 @@ export default function App() {
         onExportUnreadable={exportUnreadable}
         onClear={() => setDialog("clear")}
       />
-      <main className="app page">
-        <h1 tabIndex={-1}>準備中</h1>
-        <section>
-          <p>収集箱・明確化・置き場の画面は、これから順に足していきます。今は、データの保存と、JSONの書き出し・読み込みだけが動きます。</p>
-          <p className="hint">
-            今のデータ：{COUNT_LABELS.map(([k, label]) => `${label} ${c[k]}`).join("・")}
-          </p>
-        </section>
-      </main>
+      <NavTabs current={route.screen} inboxCount={c.inbox} />
+      <main className="app page">{screen}</main>
 
       {dialog === "import" && (
         <ImportDialog
