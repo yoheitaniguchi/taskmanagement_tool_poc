@@ -1365,3 +1365,254 @@ body:has(.undo-bar) .app {
     bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 170px);
   }
 }
+
+/* ---- 置き場の一覧の行（docs/design.md 3.3） ---- */
+.item-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.item-row:first-child {
+  border-top: none;
+}
+
+.item-row__main {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.item-row__check {
+  flex: none;
+  align-self: center;
+}
+
+.item-row__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.item-row__sub {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.item-row__meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* 完了したものは薄い文字で（「✓完了」の表記でも示す。色だけに頼らない） */
+.item-row--done .item-row__text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.item-row__details {
+  flex-basis: 100%;
+  padding-left: 28px;
+}
+
+.item-row__body,
+.pre-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.item-row > .message--error {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+}
+
+.item-row--editing {
+  display: block;
+  background: var(--surface-2);
+  margin: 0 -12px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.item-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-edit__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-edit__field label {
+  font-weight: 500;
+  font-size: 0.93rem;
+}
+
+.item-edit__field input[type="text"],
+.item-edit__field select {
+  width: 100%;
+  max-width: 640px;
+}
+
+.item-edit__field p {
+  margin: 0;
+}
+
+.item-edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item-edit__delete {
+  margin-left: auto;
+}
+
+.show-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.93rem;
+}
+
+/* ---- プロジェクト（docs/design.md 3.6） ---- */
+.project-order {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.93rem;
+}
+
+.project-table {
+  width: 100%;
+}
+
+.project-table__name {
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  white-space: normal;
+}
+
+.project-table__outcome {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-table__row--done > * {
+  color: var(--text-muted);
+}
+
+.project-status {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.attrs {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.attrs dt {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.attrs dd {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .item-row__sub {
+    margin-left: 28px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .item-row__sub .link-button {
+    min-height: 32px;
+  }
+
+  .item-edit__actions button {
+    flex: 1 1 auto;
+  }
+
+  .item-edit__delete {
+    margin-left: 0;
+  }
+
+  /* 表をカードの縦の並びにする（1枚に名称、テーマ、四半期、件数。docs/design.md 3.6） */
+  .project-table,
+  .project-table tbody,
+  .project-table tr,
+  .project-table th,
+  .project-table td {
+    display: block;
+    width: auto;
+    border: none;
+  }
+
+  .project-table {
+    border: none;
+    overflow: visible;
+  }
+
+  .project-table thead {
+    display: none;
+  }
+
+  .project-table tr {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .project-table td {
+    padding: 2px 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .project-table th {
+    padding: 0 0 4px;
+  }
+
+  .project-table td::before {
+    content: attr(data-label) "：";
+  }
+
+  .project-table__outcome {
+    max-width: none;
+  }
+
+  .attrs {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .attrs dd {
+    margin-bottom: 8px;
+  }
+}

@@ -3,6 +3,7 @@
 // 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。StrictMode では reducer が2回呼ばれる）
 import { capture } from "./capture";
 import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
+import { completeItem, deleteItem, editItem, uncompleteItem, type CompletableKind, type ItemEdit, type ItemRef } from "./items";
 import { emptyState, type AppState, type OpResult } from "./types";
 import { validateState } from "./validate";
 
@@ -32,6 +33,14 @@ export type Action =
   | { type: "clarify"; itemId: string; decision: Decision; at: string; ids: string[] }
   /** 一括振り分け。ids は選んだ件数以上 */
   | { type: "clarifyBulk"; itemIds: string[]; exit: BulkExit; at: string; ids: string[] }
+  /** 置き場の要素の編集（「元に戻す」は出さない。その場で直せるため） */
+  | { type: "editItem"; edit: ItemEdit; at: string }
+  /** 次のアクション・連絡待ちを完了にする */
+  | { type: "completeItem"; ref: ItemRef<CompletableKind>; at: string }
+  /** 完了の取り消し（「元に戻す」は出さない。docs/design.md 6.4） */
+  | { type: "uncompleteItem"; ref: ItemRef<CompletableKind>; at: string }
+  /** 置き場の要素の削除 */
+  | { type: "deleteItem"; ref: ItemRef }
   /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
@@ -79,6 +88,14 @@ export function reducer(root: Root, action: Action): Root {
         clarifyBulk(root.state, action.itemIds, action.exit, new Date(action.at), takeIds(action.ids)),
         bulkMessage(action.exit, action.itemIds.length),
       );
+    case "editItem":
+      return applyResult(root, editItem(root.state, action.edit, new Date(action.at)), null);
+    case "completeItem":
+      return applyResult(root, completeItem(root.state, action.ref, new Date(action.at)), "完了にしました");
+    case "uncompleteItem":
+      return applyResult(root, uncompleteItem(root.state, action.ref, new Date(action.at)), null);
+    case "deleteItem":
+      return applyResult(root, deleteItem(root.state, action.ref), "削除しました");
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
