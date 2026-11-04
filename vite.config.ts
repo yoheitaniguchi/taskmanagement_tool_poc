@@ -4,7 +4,7 @@ import react from "@vitejs/plugin-react";
 // 本番ビルドだけに入れる Content-Security-Policy（CLAUDE.md 8.3、docs/security/checklist.md B）。
 // connect-src 'none' で、アプリから外部への通信をブラウザ側でも禁止する。
 // 開発サーバーは HMR のためにインラインスクリプトや WebSocket を使うので、開発時には入れない。
-// frame-ancestors は meta では効かない（GitHub Pages はヘッダーを付けられない）ため入れない。受け入れるリスクとして記録する（PR の本文）
+// frame-ancestors は meta では効かない（GitHub Pages はヘッダーを付けられない）ため入れない。発注者が受け入れたリスク（docs/security/checklist.md の前提。SEC-003）
 export const PRODUCTION_CSP = [
   "default-src 'self'",
   "connect-src 'none'",

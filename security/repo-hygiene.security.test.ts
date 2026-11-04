@@ -137,6 +137,14 @@ describe("[@security] CI の権限（F）", () => {
           expect(job).toContain("github.event.pull_request.user.login != 'dependabot[bot]'");
         }
       });
+
+      // SEC-001（docs/security/reports/review-20261105-0337.md）：名前空間は VITE_PR_PREVIEW が無いと本番のものになる。
+      // ワークフローの変更でこの値が抜けると、マージ前のコードが本番の保存データを読み書きしうるので、渡していることを確かめる
+      it(`[@security] ${file}：ビルドに PR の番号（VITE_PR_PREVIEW）とプレビューの配信先（BASE_PATH）を渡し、本番と別の名前空間で保存させる`, () => {
+        const text = readFileSync(join(dir, file), "utf8");
+        expect(text).toMatch(/^\s+VITE_PR_PREVIEW:\s*\$\{\{\s*github\.event\.number\s*\}\}\s*$/m);
+        expect(text).toMatch(/^\s+BASE_PATH:\s*\/taskmanagement_tool_poc\/pr-preview\/pr-\$\{\{\s*github\.event\.number\s*\}\}\/\s*$/m);
+      });
     }
   }
 });
