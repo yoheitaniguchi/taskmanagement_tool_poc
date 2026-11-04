@@ -1,0 +1,161 @@
+{
+  "app": "taskmanagement_tool_poc",
+  "exportedAt": "2026-11-07T00:00:00.000Z",
+  "deviceName": "テスト端末",
+  "state": {
+    "schemaVersion": 1,
+    "inbox": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "createdAt": "2026-11-03T01:00:00.000Z",
+        "updatedAt": "2026-11-03T01:00:00.000Z",
+        "text": "テスト用の項目1",
+        "capturedAt": "2026-11-03T01:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "createdAt": "2026-11-03T02:00:00.000Z",
+        "updatedAt": "2026-11-03T02:00:00.000Z",
+        "text": "テスト用の項目2（絵文字 🗂️ を含む）",
+        "capturedAt": "2026-11-03T02:00:00.000Z"
+      }
+    ],
+    "actions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000020",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "capturedAt": "2026-11-03T00:00:00.000Z",
+        "movedAt": null,
+        "text": "テスト用のアクション1",
+        "projectId": "00000000-0000-4000-8000-000000000010",
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000021",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-05T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "text": "テスト用のアクション2",
+        "projectId": null,
+        "themeId": "health",
+        "status": "done",
+        "completedAt": "2026-11-05T00:00:00.000Z",
+        "note": "\tタブを含むメモ"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000022",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-06T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "text": "テスト用のアクション3",
+        "projectId": "00000000-0000-4000-8000-000000000011",
+        "themeId": null,
+        "status": "done",
+        "completedAt": "2026-11-06T00:00:00.000Z",
+        "note": ""
+      }
+    ],
+    "waitingFors": [
+      {
+        "id": "00000000-0000-4000-8000-000000000030",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "capturedAt": "2026-11-03T00:00:00.000Z",
+        "movedAt": null,
+        "text": "テスト用の連絡待ち",
+        "party": "テスト用の相手",
+        "requestedOn": "2026-11-04",
+        "projectId": "00000000-0000-4000-8000-000000000010",
+        "status": "waiting",
+        "completedAt": null,
+        "note": ""
+      }
+    ],
+    "projects": [
+      {
+        "id": "00000000-0000-4000-8000-000000000010",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "capturedAt": "2026-11-03T00:00:00.000Z",
+        "movedAt": null,
+        "name": "テスト用のプロジェクトA",
+        "outcome": "テスト用の成果A\n2行目",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000011",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-06T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": "2026-11-05T00:00:00.000Z",
+        "name": "テスト用のプロジェクトB",
+        "outcome": "テスト用の成果B",
+        "themeId": "hobby_learning",
+        "placement": null,
+        "status": "done",
+        "completedAt": "2026-11-06T00:00:00.000Z",
+        "note": "メモ"
+      }
+    ],
+    "someday": [
+      {
+        "id": "00000000-0000-4000-8000-000000000040",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "capturedAt": "2026-11-03T00:00:00.000Z",
+        "movedAt": null,
+        "text": "テスト用のいつか・多分",
+        "note": ""
+      }
+    ],
+    "references": [
+      {
+        "id": "00000000-0000-4000-8000-000000000050",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "capturedAt": "2026-11-03T00:00:00.000Z",
+        "movedAt": null,
+        "title": "テスト用の資料",
+        "body": "本文1行目\n本文2行目"
+      }
+    ],
+    "annualGoals": [
+      {
+        "id": "00000000-0000-4000-8000-000000000060",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "themeId": "work",
+        "text": "テスト用の到達状態"
+      }
+    ],
+    "quarterSheets": [
+      {
+        "id": "00000000-0000-4000-8000-000000000070",
+        "createdAt": "2026-11-04T00:00:00.000Z",
+        "updatedAt": "2026-11-04T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "quarter": 3,
+        "focusThemeIds": [
+          "work",
+          "health",
+          "finance"
+        ],
+        "wontDo": ""
+      }
+    ]
+  }
+}
