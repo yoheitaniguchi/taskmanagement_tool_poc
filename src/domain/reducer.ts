@@ -1,7 +1,8 @@
 // 状態を変える操作（CLAUDE.md 8.1、docs/design.md 4.5・6.4）。データのルールはドメインの関数で守らせ、reducer はそれを呼ぶだけにする。
 // 任意の状態を外から置く操作は、検証し直す JSON の読み込み（replaceState）と、消去（reset）だけにする（検証を迂回する経路を作らないため）。
-// 画面の操作（収集・明確化など）は PR 3 以降で、ここに足す
-import { emptyState, type AppState } from "./types";
+// 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。StrictMode では reducer が2回呼ばれる）
+import { capture } from "./capture";
+import { emptyState, type AppState, type OpResult } from "./types";
 import { validateState } from "./validate";
 
 /** 「元に戻す」で覚えておく、直前の1つの操作（保存はしない。docs/design.md 6.4） */
@@ -24,6 +25,8 @@ export type Action =
   | { type: "reset" }
   /** 直前の操作を元に戻す。値は受け取らない */
   | { type: "undo" }
+  /** 収集（F01）。at は ISO 8601 の今の時刻、id は新しい UUID */
+  | { type: "capture"; text: string; at: string; id: string }
   /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
@@ -33,8 +36,7 @@ export function initialRoot(state: AppState): Root {
   return { state, undo: null };
 }
 
-/** ドメインの関数の結果 */
-export type OpResult = { ok: true; state: AppState } | { ok: false; error: string };
+export type { OpResult };
 
 /**
  * ドメインの関数の結果を反映する（PR 3 以降の操作の case から呼ぶ）。失敗、または検証に通らない結果なら何も変えない。
@@ -54,6 +56,9 @@ export function reducer(root: Root, action: Action): Root {
     }
     case "reset":
       return { state: emptyState(), undo: null };
+    case "capture":
+      // 収集は「元に戻す」の対象にしない（docs/design.md 6.4。間違えたら明確化で削除する）
+      return applyResult(root, capture(root.state, action.text, new Date(action.at), () => action.id), null);
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
