@@ -21,7 +21,8 @@ export function useRoute(): Route {
       first.current = false;
       return;
     }
-    document.querySelector<HTMLElement>("main h1")?.focus();
+    // 画面の中で見出しを決めているとき（明確化の質問など）は、そちらを優先する
+    (document.querySelector<HTMLElement>("main [data-route-focus]") ?? document.querySelector<HTMLElement>("main h1"))?.focus();
   }, [route]);
 
   return route;

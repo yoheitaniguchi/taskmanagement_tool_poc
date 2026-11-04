@@ -1013,3 +1013,355 @@ tbody tr:hover > * {
   flex: 1 1 280px;
   margin: 0;
 }
+
+/* ---- 収集箱の一括振り分け（docs/design.md 3.4） ---- */
+.inbox__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.inbox__head h2 {
+  margin: 0;
+}
+
+.inbox__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.93rem;
+}
+
+.item-list__check {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 240px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.item-list__check input {
+  flex: none;
+  align-self: center;
+}
+
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.bulk-bar__label {
+  font-weight: 600;
+}
+
+.bulk-bar p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* ---- 明確化（1件ずつ。docs/design.md 3.5） ---- */
+.clarify__remaining {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.clarify__item {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--surface-2);
+  border-left: 4px solid var(--accent-solid);
+  border-radius: var(--radius-sm);
+}
+
+.clarify__item-text {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.clarify__item-meta {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.clarify__step {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.clarify__question {
+  margin: 4px 0 8px;
+  font-size: 1.2rem;
+}
+
+.clarify__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.clarify__options--sub {
+  padding-left: 16px;
+  border-left: 2px solid var(--border);
+}
+
+.clarify__option {
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-height: 44px;
+}
+
+.clarify__option[aria-pressed="true"] {
+  border-color: var(--accent-solid);
+  background: var(--accent-soft);
+}
+
+.clarify__option-label {
+  display: block;
+  font-weight: 600;
+}
+
+.clarify__option-hint {
+  display: block;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.clarify__form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.clarify__form > label,
+.clarify label[for] {
+  font-weight: 500;
+  font-size: 0.93rem;
+  margin-top: 8px;
+}
+
+.clarify__form p,
+.clarify .hint {
+  margin: 0 0 4px;
+}
+
+.clarify input[type="text"],
+.clarify select {
+  width: 100%;
+  max-width: 640px;
+}
+
+.clarify input[type="text"]#clarify-text {
+  margin-bottom: 8px;
+}
+
+.clarify__themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clarify__themes legend {
+  font-weight: 500;
+  font-size: 0.93rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--accent-solid);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.clarify__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.clarify__choices legend {
+  font-weight: 600;
+}
+
+.clarify__choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.clarify__choice input {
+  margin-top: 3px;
+  flex: none;
+}
+
+.clarify__choice:has(input:checked) {
+  border-color: var(--accent-solid);
+  background: var(--accent-soft);
+}
+
+.clarify__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.clarify__cancel {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.clarify__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---- 「元に戻す」の帯（D1、docs/design.md 6.4） ---- */
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 6px 8px 6px 16px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.undo-bar__message {
+  overflow-wrap: anywhere;
+}
+
+.undo-bar__undo {
+  white-space: nowrap;
+}
+
+/* 帯に本文の最後が隠れないようにする */
+body:has(.undo-bar) .app {
+  padding-bottom: 96px;
+}
+
+@media (max-width: 720px) {
+  .clarify__options {
+    flex-direction: column;
+  }
+
+  .clarify__option {
+    width: 100%;
+  }
+
+  .clarify__nav button {
+    flex: 1 1 auto;
+  }
+
+  .clarify__cancel {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .clarify__cancel button {
+    width: 100%;
+  }
+
+  .clarify__form button.button--primary,
+  .clarify__form .button--primary {
+    width: 100%;
+  }
+
+  .inbox__head .button {
+    width: 100%;
+  }
+
+  /* 一括振り分けのボタンは、項目を選んだときだけ、タブバーの上に固定して出す（docs/design.md 3.4） */
+  .bulk-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    z-index: 35;
+    margin: 0;
+    border-radius: 0;
+    border-width: 1px 0 0;
+    background: var(--surface);
+    box-shadow: 0 -4px 16px rgb(0 0 0 / 0.08);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bulk-bar__label {
+    grid-column: 1 / -1;
+  }
+
+  .bulk-bar p {
+    grid-column: 1 / -1;
+  }
+
+  body:has(.bulk-bar) .app {
+    padding-bottom: 180px;
+  }
+
+  .undo-bar {
+    left: 12px;
+    right: 12px;
+    transform: none;
+    width: auto;
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);
+  }
+
+  /* 一括振り分けの帯が出ているときは、その上に出す */
+  body:has(.bulk-bar) .undo-bar {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 170px);
+  }
+}

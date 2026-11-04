@@ -1,5 +1,5 @@
 // アプリの外枠（節目2）：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
-// 明確化と置き場の画面は、節目2の続きで足す（docs/plans/milestone-2.md 2章）
+// 置き場の画面は、節目2の続きで足す（docs/plans/milestone-2.md 2章）
 import { useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
@@ -9,12 +9,15 @@ import { ClearDialog } from "./components/ClearDialog";
 import { DeviceNameDialog } from "./components/DeviceNameDialog";
 import { ImportDialog } from "./components/ImportDialog";
 import { StorageBanner } from "./components/StorageBanner";
+import { UndoBar } from "./components/UndoBar";
 import { capture } from "./domain/capture";
+import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
 import { backupFileName } from "./domain/persistence";
 import { counts } from "./domain/summaries";
 import { downloadText } from "./files";
 import { screenLabel } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
+import { ClarifyFlow } from "./screens/ClarifyFlow";
 import { InboxScreen } from "./screens/InboxScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { usePersistedState } from "./state/usePersistedState";
@@ -78,12 +81,57 @@ export default function App() {
     return result.ok ? "このタブでは入れられません" : result.error;
   };
 
+  /** 明確化・一括振り分けを使えない理由（収集と同じ。docs/design.md 6.3） */
+  const clarifyBlocked = readOnly
+    ? "このタブは読み取り専用です（別のタブで変更されたため）"
+    : store.status.corrupt !== null && !store.status.recovered
+      ? "保存データを読めなかったため、自動保存を止めています。上の帯の操作で直すと振り分けられます"
+      : null;
+
+  /** 1件ずつの明確化を確定する。できなければ理由を返す（プロジェクトは最初の一手と合わせて id を2つ使う） */
+  const onClarify = (itemId: string, decision: Decision): string | null => {
+    const at = new Date();
+    const ids = [crypto.randomUUID(), crypto.randomUUID()];
+    if (store.dispatch({ type: "clarify", itemId, decision, at: at.toISOString(), ids })) return null;
+    let i = 0;
+    const result = clarify(state, itemId, decision, at, () => ids[i++] ?? "");
+    return result.ok ? "このタブでは振り分けられません" : result.error;
+  };
+
+  /** 一括振り分け。できなければ理由を返す */
+  const onBulk = (itemIds: string[], exit: BulkExit): string | null => {
+    const at = new Date();
+    const ids = itemIds.map(() => crypto.randomUUID());
+    if (store.dispatch({ type: "clarifyBulk", itemIds, exit, at: at.toISOString(), ids })) return null;
+    let i = 0;
+    const result = clarifyBulk(state, itemIds, exit, at, () => ids[i++] ?? "");
+    return result.ok ? "このタブでは振り分けられません" : result.error;
+  };
+
+  const undo = store.root.undo;
+  const onUndo = () => {
+    store.dispatch({ type: "undo" });
+    // 帯が消えるので、フォーカスを画面の見出し（明確化なら質問）に移す
+    (document.querySelector<HTMLElement>("main [data-route-focus]") ?? document.querySelector<HTMLElement>("main h1"))?.focus();
+  };
+
   const screen = (() => {
     switch (route.screen) {
       case "home":
         return <HomeScreen counts={c} showIntro={!store.meta.introDismissed} onDismissIntro={store.dismissIntro} />;
       case "inbox":
-        return <InboxScreen items={state.inbox} now={now} />;
+        return route.clarifyStep !== null ? (
+          <ClarifyFlow
+            items={state.inbox}
+            projects={state.projects}
+            step={route.clarifyStep}
+            now={now}
+            disabledReason={clarifyBlocked}
+            onClarify={onClarify}
+          />
+        ) : (
+          <InboxScreen items={state.inbox} now={now} disabledReason={clarifyBlocked} onBulk={onBulk} />
+        );
       default:
         return <PlaceholderScreen title={screenLabel(route.screen)} />;
     }
@@ -119,6 +167,7 @@ export default function App() {
       />
       <NavTabs current={route.screen} inboxCount={c.inbox} />
       <main className="app page">{screen}</main>
+      {undo !== null && <UndoBar message={undo.message} onUndo={onUndo} onDismiss={() => store.dispatch({ type: "dismissUndo" })} />}
 
       {dialog === "import" && (
         <ImportDialog
