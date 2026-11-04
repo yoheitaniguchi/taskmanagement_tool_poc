@@ -9,6 +9,15 @@ export const FISCAL_YEAR_MAX = 2099;
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/** 実在する UTC の日時で、toISOString() と同じ書き方か（2月30日や、ミリ秒の無い書き方を拒否する） */
+export function isIsoDateTime(value: unknown): value is string {
+  if (typeof value !== "string" || !DATETIME_RE.test(value)) return false;
+  const t = Date.parse(value);
+  return !Number.isNaN(t) && new Date(t).toISOString() === value;
+}
+
 /** 端末のタイムゾーンでの日付（YYYY-MM-DD）。UTC に直さない（日本時間の 0:00〜8:59 が前日にならないように） */
 export function toLocalDate(now: Date): string {
   return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;

@@ -1,0 +1,39 @@
+// 確認の画面（既存PoCから移したもの）。ブラウザの <dialog> の showModal を使い、フォーカスを中に閉じ込め、Esc で閉じる。
+// 閉じたら、開く前にフォーカスがあった要素に戻す。その要素が消えていたら（削除の確認など）、画面の見出しに戻す
+import { useEffect, useRef, type ReactNode } from "react";
+
+interface Props {
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}
+
+export function Modal({ title, onClose, children }: Props) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog?.showModal();
+    // showModal は最初の入力欄などにフォーカスを置くので、決めた要素（確認画面の［やめる］など。docs/design.md 3.10）に置き直す
+    dialog?.querySelector<HTMLElement>("[data-autofocus]")?.focus();
+    return () => {
+      dialog?.close();
+      if (opener?.isConnected) opener.focus();
+      else document.querySelector<HTMLElement>("main h1")?.focus();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className="modal"
+      aria-labelledby="modal-title"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+    >
+      <h2 id="modal-title">{title}</h2>
+      {children}
+    </dialog>
+  );
+}

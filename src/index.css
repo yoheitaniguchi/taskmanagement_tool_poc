@@ -479,6 +479,35 @@ details > summary {
   text-align: left;
 }
 
+/* メニューの中の、ボタンでない行（表示の切替・容量の表示） */
+.menu__section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+}
+
+.menu__note {
+  margin: 0;
+  padding: 6px 12px;
+  color: var(--text-muted);
+  font-size: 0.87rem;
+}
+
+/* 保存の帯の中のボタン */
+.banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 確認画面の表は、狭い画面では横にスクロールする（ページ全体は横にスクロールさせない） */
+.table-scroll {
+  overflow-x: auto;
+}
+
 /* ---- 画面の切り替え（PCでは上部、スマホでは下部に固定） ---- */
 .tabs {
   position: sticky;
