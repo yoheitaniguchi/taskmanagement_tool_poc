@@ -29,9 +29,16 @@ export interface Route {
   screen: ScreenId;
   /** プロジェクトの詳細（#/projects/<id>）のときだけ。UUID の形のものだけ */
   projectId: string | null;
+  /**
+   * 1件ずつの明確化の質問（#/inbox/clarify、#/inbox/clarify/2、#/inbox/clarify/3）。それ以外は null。
+   * 質問を進めるたびに履歴を1つ積み、スマホの「戻る」を［前の質問に戻る］と同じにする（D14、docs/design.md 2.1）
+   */
+  clarifyStep: ClarifyStep | null;
 }
 
-export const HOME: Route = { screen: "home", projectId: null };
+export type ClarifyStep = 1 | 2 | 3;
+
+export const HOME: Route = { screen: "home", projectId: null, clarifyStep: null };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
@@ -47,14 +54,24 @@ export function parseRoute(hash: string): Route {
     return HOME;
   }
   const parts = path.split("/");
+  if (parts[0] === "inbox" && parts[1] === "clarify") {
+    if (parts.length === 2) return { screen: "inbox", projectId: null, clarifyStep: 1 };
+    if (parts.length === 3 && (parts[2] === "2" || parts[2] === "3")) return { screen: "inbox", projectId: null, clarifyStep: Number(parts[2]) as ClarifyStep };
+    return HOME;
+  }
   if (parts.length > 2) return HOME;
   const screen = SCREENS.find((s) => s.path === parts[0]);
   if (!screen) return HOME;
   if (parts.length === 2) {
     if (screen.id !== "projects") return HOME;
-    return { screen: "projects", projectId: UUID_RE.test(parts[1]) ? parts[1] : null };
+    return { screen: "projects", projectId: UUID_RE.test(parts[1]) ? parts[1] : null, clarifyStep: null };
   }
-  return { screen: screen.id, projectId: null };
+  return { screen: screen.id, projectId: null, clarifyStep: null };
+}
+
+/** 1件ずつの明確化の質問の URL */
+export function clarifyHref(step: ClarifyStep): string {
+  return step === 1 ? "#/inbox/clarify" : `#/inbox/clarify/${step}`;
 }
 
 /** 画面の URL（a 要素の href にそのまま使う） */

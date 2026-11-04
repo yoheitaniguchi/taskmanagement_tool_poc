@@ -2,6 +2,7 @@
 // 任意の状態を外から置く操作は、検証し直す JSON の読み込み（replaceState）と、消去（reset）だけにする（検証を迂回する経路を作らないため）。
 // 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。StrictMode では reducer が2回呼ばれる）
 import { capture } from "./capture";
+import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
 import { emptyState, type AppState, type OpResult } from "./types";
 import { validateState } from "./validate";
 
@@ -27,10 +28,20 @@ export type Action =
   | { type: "undo" }
   /** 収集（F01）。at は ISO 8601 の今の時刻、id は新しい UUID */
   | { type: "capture"; text: string; at: string; id: string }
+  /** 明確化（1件ずつ）。ids は新しい要素に使う UUID（使う分だけ先頭から使う。プロジェクトなら2つ） */
+  | { type: "clarify"; itemId: string; decision: Decision; at: string; ids: string[] }
+  /** 一括振り分け。ids は選んだ件数以上 */
+  | { type: "clarifyBulk"; itemIds: string[]; exit: BulkExit; at: string; ids: string[] }
   /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
   | { type: "forgetUndo" };
+
+/** 操作に入れて渡した id を、先頭から1つずつ使う。足りなければ空の文字列（id の検証に通らないので、状態は変わらない） */
+function takeIds(ids: readonly string[]): () => string {
+  let i = 0;
+  return () => ids[i++] ?? "";
+}
 
 export function initialRoot(state: AppState): Root {
   return { state, undo: null };
@@ -59,6 +70,15 @@ export function reducer(root: Root, action: Action): Root {
     case "capture":
       // 収集は「元に戻す」の対象にしない（docs/design.md 6.4。間違えたら明確化で削除する）
       return applyResult(root, capture(root.state, action.text, new Date(action.at), () => action.id), null);
+    case "clarify":
+      // 明確化のすべての出口の直後に「元に戻す」を出す（D1。収集箱に戻るのは、この「元に戻す」だけ。5.3）
+      return applyResult(root, clarify(root.state, action.itemId, action.decision, new Date(action.at), takeIds(action.ids)), EXIT_MESSAGES[action.decision.exit]);
+    case "clarifyBulk":
+      return applyResult(
+        root,
+        clarifyBulk(root.state, action.itemIds, action.exit, new Date(action.at), takeIds(action.ids)),
+        bulkMessage(action.exit, action.itemIds.length),
+      );
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };

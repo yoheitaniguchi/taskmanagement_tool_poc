@@ -2,7 +2,7 @@
 // 状態の表示だけを置き、結論・指示（「〜しましょう」「滞留しています」など）は出さない（CLAUDE.md 4.3）。
 // 今の四半期と進行中のプロジェクトの表は、節目3で足す
 import type { Counts } from "../domain/summaries";
-import { routeHref, type ScreenId } from "../route";
+import { clarifyHref, routeHref, type ScreenId } from "../route";
 
 interface Props {
   counts: Counts;
@@ -39,7 +39,7 @@ export function HomeScreen({ counts, showIntro, onDismissIntro }: Props) {
           未処理 <strong>{counts.inbox}</strong>件
         </p>
         {counts.inbox > 0 && (
-          <a className="button button--primary" href={routeHref("inbox")}>
+          <a className="button button--primary" href={clarifyHref(1)}>
             明確化を始める
           </a>
         )}
