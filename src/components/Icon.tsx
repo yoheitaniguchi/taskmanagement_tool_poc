@@ -5,6 +5,11 @@ const PATHS = {
   monitor: "M3 5h18v11H3zM8 20h8M12 16v4",
   download: "M12 3v12M7 10l5 5 5-5M5 21h14",
   more: "M5 12h.01M12 12h.01M19 12h.01",
+  home: "M3 11 12 4l9 7M5 9.5V20h5v-6h4v6h5V9.5",
+  inbox: "M3 13h5l1.5 3h5L16 13h5M5.5 5h13L21 13v6H3v-6z",
+  check: "M4 12.5 9 17.5 20 6.5",
+  folder: "M3 6.5h6l2 2h10V19H3z",
+  menu: "M4 6h16M4 12h16M4 18h16",
 } as const;
 
 export type IconName = keyof typeof PATHS;

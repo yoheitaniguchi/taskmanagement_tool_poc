@@ -161,7 +161,8 @@ a {
 }
 
 /* ---- 部品：ボタン・入力欄 ---- */
-button {
+button,
+.button {
   font: inherit;
   font-size: 0.93rem;
   font-weight: 500;
@@ -265,6 +266,11 @@ details > summary {
   background: none;
 }
 
+/* ボタンの形のリンク（画面の切替を URL で行うため。docs/design.md 2.1） */
+a.button {
+  text-decoration: none;
+}
+
 .button--primary {
   background: var(--accent-solid);
   color: var(--accent-fg);
@@ -291,10 +297,54 @@ details > summary {
 }
 
 /* ---- 共通ヘッダー ---- */
+/* 収集の入力欄の行は、スクロールしても隠れないよう上部に固定する（docs/design.md 3.1） */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
+  padding: 10px 16px 4px;
   background: var(--surface);
+}
+
+/* 受け渡しの状態は固定せず、スクロールで流れる位置に置く */
+.app-status {
+  padding: 0 16px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-status > * {
+  max-width: 1120px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---- 収集の入力欄（F01） ---- */
+.capture {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.capture__row {
+  display: flex;
+  gap: 8px;
+}
+
+.capture__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.capture__hint {
+  min-height: 1.4em;
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.capture__hint--error {
+  color: var(--danger-text);
 }
 
 .app-header > * {
@@ -303,17 +353,19 @@ details > summary {
   margin-right: auto;
 }
 
+/* 入力欄の下に表示の行があるので、上端で揃える */
 .app-header__row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
 }
 
 .app-header__title {
   display: flex;
   align-items: center;
+  min-height: 36px;
   gap: 10px;
   margin: 0;
   font-weight: 700;
@@ -346,7 +398,7 @@ details > summary {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 20px;
-  margin: 8px auto 0;
+  margin: 6px auto 0;
   font-size: 0.85rem;
   color: var(--text-muted);
 }
@@ -509,10 +561,11 @@ details > summary {
 }
 
 /* ---- 画面の切り替え（PCでは上部、スマホでは下部に固定） ---- */
+/* PC では収集の入力欄の行だけを固定し、切替のタブは流れる位置に置く（9つが入りきらない幅では、タブの中だけを横にスクロールする） */
 .tabs {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
+  overflow-x: auto;
   display: flex;
   gap: 4px;
   padding: 0 max(16px, calc((100% - 1088px) / 2));
@@ -524,6 +577,12 @@ details > summary {
 
 .tabs__tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  white-space: nowrap;
+  text-decoration: none;
   min-height: 46px;
   padding: 8px 14px;
   border: none;
@@ -552,6 +611,27 @@ details > summary {
   height: 2px;
   border-radius: 2px;
   background: var(--accent-solid);
+}
+
+/* 収集箱の未処理の件数（色ではなく数字で示す） */
+.tabs__count {
+  min-width: 1.6em;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* スマホだけで使う「メニュー」（PC では9つのタブをすべて出す） */
+.tabs__more {
+  display: none;
+}
+
+.tabs__tab .icon {
+  display: none;
 }
 
 /* ---- 画面の中身 ---- */
@@ -720,7 +800,15 @@ tbody tr:hover > * {
     padding: 0;
   }
 
+  /* スマホでは、上部に固定するのは収集の入力欄・［入れる］・［書き出す］・［⋯］の1行だけ（docs/design.md 3.1） */
+  .app-header__title {
+    display: none;
+  }
+
   .tabs {
+    overflow: visible;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
     position: fixed;
     top: auto;
     bottom: 0;
@@ -728,7 +816,7 @@ tbody tr:hover > * {
     right: 0;
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0;
     padding: 0 0 env(safe-area-inset-bottom);
     background: var(--surface);
@@ -746,8 +834,41 @@ tbody tr:hover > * {
   }
 
   .tabs__tab .icon {
+    display: block;
     width: 22px;
     height: 22px;
+  }
+
+  .tabs__tab {
+    display: flex;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .tabs__tab--secondary {
+    display: none;
+  }
+
+  .tabs__more {
+    display: block;
+  }
+
+  .tabs__more > .tabs__tab {
+    width: 100%;
+  }
+
+  .tabs__more--current > .tabs__tab {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* 件数は、アイコンの右上に小さく重ねる */
+  .tabs__count {
+    position: absolute;
+    top: 4px;
+    left: calc(50% + 6px);
+    font-size: 0.68rem;
   }
 
   .tabs__tab[aria-current="page"] {
@@ -832,4 +953,63 @@ tbody tr:hover > * {
   * {
     transition: none !important;
   }
+}
+
+/* ---- 一覧（収集箱など。docs/design.md 3.3・3.4） ---- */
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.item-list__row:first-child {
+  border-top: none;
+}
+
+.item-list__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.item-list__meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ---- ホーム ---- */
+.home__count {
+  font-size: 1.1rem;
+}
+
+.home__counts {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.home__counts li {
+  margin: 4px 0;
+}
+
+.intro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.intro p {
+  flex: 1 1 280px;
+  margin: 0;
 }

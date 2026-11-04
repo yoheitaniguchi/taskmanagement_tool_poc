@@ -153,3 +153,9 @@ export function emptyState(): AppState {
     quarterSheets: [],
   };
 }
+
+/**
+ * ドメインの関数の結果（docs/design.md 4.5）。失敗のときは状態を変えず、利用者向けの日本語の理由を返す
+ * （全部変えるか、何も変えないか）
+ */
+export type OpResult = { ok: true; state: AppState } | { ok: false; error: string };
