@@ -425,7 +425,7 @@ interface ReferenceItem extends Placed { title: string; body: string } // 件名
 interface AnnualGoal extends Base {
   fiscalYear: number;
   themeId: ThemeId;
-  text: string;                 // 到達状態（2,000字）
+  text: string;                 // 到達状態（2,000字、必須。空にしたら年次目標そのものを消す。PR 2a で決定）
 }
 
 interface QuarterSheet extends Base {
@@ -483,7 +483,7 @@ interface AppState {
 
 | 操作 | 子の扱い | 確認・元に戻す |
 | --- | --- | --- |
-| 完了にする | 未完了の子を、同じ完了日時で一緒に完了にする（D2） | 確認なし。「プロジェクトと、未完了の N件を完了にしました［元に戻す］」 |
+| 完了にする | 未完了の子を一緒に完了にする（D2）。子の完了日時は、プロジェクトの完了日時と、その子の作成日時の遅い方にする（時計の遅れた端末で、後から足した子を完了にしたときに、子の「作成日時 ≦ 完了日時」が破れないように。D15。PR 2a の点検で追記） | 確認なし。「プロジェクトと、未完了の N件を完了にしました［元に戻す］」 |
 | 完了を取り消す | 子の状態は変えない（5.3） | なし（取り消しを取り消すには、もう一度完了にする） |
 | 削除する | 確認画面で「一緒に削除する」か「単独のものとして残す」を選ぶ（初期値は残す。D3） | 確認画面（「次のアクション 2件・連絡待ち 1件（完了したもの 4件を含む）」と件数を出す） |
 | 移す | 未完了の子があれば移せない。完了した子だけなら切り離す（D4） | なし |
@@ -503,11 +503,11 @@ interface AppState {
 | `items.ts` | `editItem`、`completeItem`、`uncompleteItem`、`deleteItem`、`addActionToProject`、`addWaitingToProject` | 状態と完了日時の整合。完了したプロジェクトに未完了の子を残さない（付け替え・足す・完了の取り消しのどれでも）。参照の整合。プロジェクトに属するアクションはテーマを持たない |
 | `projects.ts` | `createProject`、`editProject`、`placeProject`、`completeProject`、`uncompleteProject`、`deleteProject(…, childPolicy)` | 目的とする成果とテーマは必須。置く四半期は0か1つ。子の扱い（4.4） |
 | `move.ts` | `moveItem(state, source, target, input, now)`、`moveRule(sourceKind, targetKind)` | 移動の表（4.3）。完了したものは移せない。id・作成日時・収集日時を引き継ぐ |
-| `plan.ts` | `setAnnualGoal`、`toggleFocusTheme`、`setWontDo`、`annualGoalFor` | 年次目標は年度 × テーマで1件、四半期シートは年度 × 四半期で1件。重点テーマは最大3つで重複しない |
+| `plan.ts` | `setAnnualGoal`、`toggleFocusTheme`、`setWontDo`、`annualGoalFor` | 年次目標は年度 × テーマで1件、四半期シートは年度 × 四半期で1件。重点テーマは最大3つで重複しない。年次目標の到達状態を空にしたら、年次目標そのものを消す（四半期シートは、空でも残す） |
 | `summaries.ts` | `projectSummaries(state)`、`roadmapCells(state, fy)`、`unplacedProjects(state)`、`activeProjectsPlacedBefore(state, fy)`、`counts(state)` | 数えて並べるだけ。「問題かどうか」の判定はしない（4.3） |
-| `validate.ts` | `validateState(unknown)`、`LIMITS` | 5.3のすべてのルールと、8.2の検証項目（4.6） |
+| `validate.ts` | `validateState(unknown)`、`validateExport(unknown)`、`stateSize(state)`、`LIMITS` | 5.3のすべてのルールと、8.2の検証項目（4.6） |
 | `persistence.ts` | `storageNamespace`、`loadFromStorage`、`saveToStorage`、`clearStorage`、`loadDeviceMeta`、`saveDeviceMeta`、`loadThemePreference`、`saveThemePreference`、`parseExportText`、`serializeExport`、`exportFileName`、`storageUsage` | 6章。Storage API に触るのはこのファイルだけ |
-| `transfer.ts` | `validateDeviceName`、`validateDeviceMeta`、`stateFingerprint`、`transferStatus(meta, state)` | 端末名の許可リスト。「書き出した後の変更があるか」を、書き出し・読み込みのときの状態の指紋と今の状態の比較で出す（6.2） |
+| `transfer.ts` | `isValidDeviceName`（保存・JSONの値の判定）、`validateDeviceName`（入力の正規化と判定）、`validateDeviceMeta`、`stateFingerprint`、`transferStatus(meta, state)` | 端末名の許可リスト。「書き出した後の変更があるか」を、書き出し・読み込みのときの状態の指紋と今の状態の比較で出す（6.2） |
 | `reducer.ts` | `reducer(root, action)` | ドメインの関数を呼ぶだけ。「元に戻す」（`undo`）もここで扱い、任意の状態を置く操作は、検証済みのJSONの読み込み（`replaceState`）と消去（`reset`）だけにする（6.4） |
 
 ### 4.6 JSON・localStorageの読み込みでの検証
@@ -530,6 +530,9 @@ interface AppState {
 - 件数：各配列が上限以内。状態全体が600万字以内
 
 読み込んだ値は、検証した項目だけを新しいオブジェクトに詰め替えて状態にする（スプレッドで丸ごと写さない。既存PoCと同じ）。
+
+- 状態全体の大きさは `stateSize(state)`（`JSON.stringify` の文字数。UTF-16の単位）の1か所だけで数える。ドメインの関数も同じ関数で上限を確かめる（数え方が違うと、保存できたのに次の起動で読めない状態ができるため）
+- 文字列が前後の空白を除いてNFCになっているかは検証しない（正規化は、ドメインの関数が書き込むときに行う。読み込みで弾くと、手で直したJSONなどが読めなくなるだけで、守るものが無いため）
 
 ### 4.7 文字数・件数の上限と容量の見込み（D10。8.2）
 
@@ -714,3 +717,4 @@ JSONを読み込みます（今のデータは置き換えられ、元に戻せ�
 | 2026-11-03 | 初版（案） |
 | 2026-11-03 | サブエージェントの点検（domain・ux・security・milestone）の指摘を反映。D1を広げて代わりの案を添え、D15を追加。時計のずれ・上限・受け渡しの判定・Storage API の1か所化・外枠とブラウザの設定の検証・スマホの固定部分・明確化の入力の保持などを直した |
 | 2026-11-03 | 発注者が D1〜D15 をすべて推奨案のとおり承認。スマホを Android として、書き出したファイルの扱い（6.2）を Android の手順に直した |
+| 2026-11-04 | 節目2 PR 2a（型と検証）：年次目標の到達状態を必須にし、空にしたら年次目標を消すことにした（4.2・4.5）。プロジェクトを完了にするときの子の完了日時（4.4）、状態全体の大きさの数え方と、正規化を検証しないこと（4.6）を書き足した（domain-reviewer の点検） |
