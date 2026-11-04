@@ -2,7 +2,7 @@
 // unknown を受け取り、型と値を確かめながら、検証した項目だけで新しいオブジェクトを組み立て直す
 // （パースした値をそのまま状態に使ったり、スプレッドで丸ごと写したりしない）。
 // 1つでも問題があれば、理由の一覧を返して何も取り込まない。これは整合性の検証であり、意図的な改ざんは検知できない
-import { FISCAL_YEAR_MAX, FISCAL_YEAR_MIN, isFiscalYear, isQuarter, isValidDate } from "./fiscal";
+import { FISCAL_YEAR_MAX, FISCAL_YEAR_MIN, isFiscalYear, isIsoDateTime, isQuarter, isValidDate } from "./fiscal";
 import { isThemeId, type ThemeId } from "./themes";
 import { charCount, hasForbiddenControl, hasNewline, isBlank } from "./text";
 import { isValidDeviceName } from "./transfer";
@@ -53,7 +53,6 @@ export type ExportValidationResult = { ok: true; file: ExportFile } | { ok: fals
 const APP_NAME = "taskmanagement_tool_poc";
 const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 type Rec = Record<string, unknown>;
 
@@ -61,13 +60,6 @@ function isPlainRecord(v: unknown): v is Rec {
   if (typeof v !== "object" || v === null || Array.isArray(v)) return false;
   const proto: unknown = Object.getPrototypeOf(v);
   return proto === Object.prototype || proto === null;
-}
-
-/** 実在する UTC の日時で、toISOString() と同じ書き方か（2月30日や、ミリ秒の無い書き方を拒否する） */
-export function isIsoDateTime(value: unknown): value is string {
-  if (typeof value !== "string" || !DATETIME_RE.test(value)) return false;
-  const t = Date.parse(value);
-  return !Number.isNaN(t) && new Date(t).toISOString() === value;
 }
 
 /** 日時を時刻として比べる値（文字列の大小で比べない） */

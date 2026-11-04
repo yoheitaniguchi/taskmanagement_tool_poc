@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fixture from "./__fixtures__/export-v1.json";
-import { emptyState, type AppState } from "./types";
+import { fullState } from "./testData";
+import { emptyState } from "./types";
 import { LIMITS, stateSize, validateExport, validateState } from "./validate";
 
 // 架空の v1 データ（__fixtures__/export-v1.json）。テストごとに写しを作って書き換える
@@ -252,29 +253,9 @@ describe("件数と大きさ（4.7）", () => {
   });
 
   it("状態全体が 600万字を超えたら拒否し、ちょうどなら通す", () => {
-    // 資料を並べて、JSON にしたときにちょうど 600万字になる状態を作る（項目名・日時の分も数える）
-    const reference = (i: number, bodyLength: number) => ({
-      id: `00000000-0000-4000-8000-${String(100000 + i).padStart(12, "0")}`,
-      createdAt: "2026-11-04T00:00:00.000Z",
-      updatedAt: "2026-11-04T00:00:00.000Z",
-      capturedAt: null,
-      movedAt: null,
-      title: `テスト用の資料${i}`,
-      body: "あ".repeat(bodyLength),
-    });
-    const state: AppState = emptyState();
-    let size = JSON.stringify(state).length;
-    for (let i = 0; size < LIMITS.stateChars; i++) {
-      const empty = reference(i, 0);
-      const overhead = JSON.stringify(empty).length + (state.references.length > 0 ? 1 : 0);
-      const bodyLength = Math.min(LIMITS.bodyLength, LIMITS.stateChars - size - overhead);
-      if (bodyLength < 0) break;
-      state.references.push(reference(i, bodyLength));
-      size += overhead + bodyLength;
-    }
+    const state = fullState();
     expect(stateSize(state)).toBe(LIMITS.stateChars);
     expect(validateState(state).ok).toBe(true);
-
     state.references[state.references.length - 1].title += "あ";
     expectRejected(state, "データ全体が大きすぎます（6,000,001字。上限は6,000,000字）");
   });
