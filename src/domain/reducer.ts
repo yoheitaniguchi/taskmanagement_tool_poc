@@ -5,6 +5,7 @@ import { capture } from "./capture";
 import { parseAt } from "./common";
 import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
 import { quarterLabel } from "./fiscal";
+import { moveItem, PLACE_LABELS, type MoveInput, type MoveRef, type PlaceKind } from "./move";
 import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem, type CompletableKind, type ItemEdit, type ItemRef } from "./items";
 import {
   completeProject,
@@ -70,6 +71,8 @@ export type Action =
   | { type: "addActionToProject"; projectId: string; text: string; at: string; id: string }
   /** プロジェクトの画面から連絡待ちを足す */
   | { type: "addWaitingToProject"; projectId: string; input: { text: string; party: string; requestedOn: string }; at: string; id: string }
+  /** 置き場の間の移動（docs/design.md 4.3。「元に戻す」を出す。D1） */
+  | { type: "moveItem"; source: MoveRef; target: PlaceKind; input: MoveInput; at: string }
   /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
@@ -166,6 +169,10 @@ export function reducer(root: Root, action: Action): Root {
       return timed(root, action.at, (now) => applyResult(root, addActionToProject(root.state, action.projectId, action.text, now, () => action.id), null));
     case "addWaitingToProject":
       return timed(root, action.at, (now) => applyResult(root, addWaitingToProject(root.state, action.projectId, action.input, now, () => action.id), null));
+    case "moveItem":
+      return timed(root, action.at, (now) =>
+        applyResult(root, moveItem(root.state, action.source, action.target, action.input, now), `${PLACE_LABELS[action.target] ?? ""}に移しました`),
+      );
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
