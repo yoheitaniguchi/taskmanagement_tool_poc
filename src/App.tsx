@@ -1,6 +1,5 @@
 // アプリの外枠：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
-// ロードマップは、節目3の PR 9 で足す（docs/plans/milestone-3.md 2章）
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
 import { CaptureBox } from "./components/CaptureBox";
@@ -29,6 +28,7 @@ import { InboxScreen } from "./screens/InboxScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { PlaceListScreen } from "./screens/PlaceListScreen";
 import { PlanScreen, type PlanHandlers } from "./screens/PlanScreen";
+import { RoadmapScreen } from "./screens/RoadmapScreen";
 import { ProjectDetailScreen, type ProjectHandlers } from "./screens/ProjectDetailScreen";
 import { ProjectsScreen } from "./screens/ProjectsScreen";
 import { usePersistedState } from "./state/usePersistedState";
@@ -44,6 +44,25 @@ export default function App() {
   // （プロジェクトの詳細から、置いた年度を渡して開くときだけ使う。docs/plans/milestone-3.md 2.2）
   const [planYear, setPlanYear] = useState<number | null>(null);
   const [prevScreen, setPrevScreen] = useState(route.screen);
+  useEffect(() => {
+    // 画面のどこにファイルやリンクを落としても、ブラウザがそれを開いてアプリから離れないようにする（docs/design.md 3.8）。
+    // 入力欄に文字を落とすことはできるよう、入力欄の上では止めない。ロードマップのセルは自分で受け取る
+    const editable = (t: EventTarget | null) => t instanceof HTMLElement && t.closest("input, textarea, [contenteditable='true']") !== null;
+    const onOver = (e: globalThis.DragEvent) => {
+      if (e.defaultPrevented || editable(e.target)) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "none";
+    };
+    const onDrop = (e: globalThis.DragEvent) => {
+      if (!editable(e.target)) e.preventDefault();
+    };
+    window.addEventListener("dragover", onOver);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragover", onOver);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, []);
   if (prevScreen !== route.screen) {
     setPrevScreen(route.screen);
     if (prevScreen === "plan") setPlanYear(null);
@@ -288,6 +307,18 @@ export default function App() {
             onChangeYear={setPlanYear}
             disabledReason={changeBlocked}
             handlers={planHandlers}
+          />
+        );
+      case "roadmap":
+        return (
+          <RoadmapScreen
+            state={state}
+            now={now}
+            disabledReason={changeBlocked}
+            onPlace={(id, placement, expectedThemeId) => {
+              const at = new Date();
+              return run({ type: "placeProject", id, placement, expectedThemeId, at: at.toISOString() }, () => placeProject(state, id, placement, at, expectedThemeId));
+            }}
           />
         );
       default:
