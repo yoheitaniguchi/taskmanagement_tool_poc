@@ -47,14 +47,16 @@ export default function App() {
   useEffect(() => {
     // 画面のどこにファイルやリンクを落としても、ブラウザがそれを開いてアプリから離れないようにする（docs/design.md 3.8）。
     // 入力欄に文字を落とすことはできるよう、入力欄の上では止めない。ロードマップのセルは自分で受け取る
+    // ファイルは入力欄の上でも止める（ブラウザによっては、入力欄に落としたファイルも開いてしまうため）
     const editable = (t: EventTarget | null) => t instanceof HTMLElement && t.closest("input, textarea, [contenteditable='true']") !== null;
+    const hasFiles = (e: globalThis.DragEvent) => Array.from(e.dataTransfer?.types ?? []).includes("Files");
     const onOver = (e: globalThis.DragEvent) => {
-      if (e.defaultPrevented || editable(e.target)) return;
+      if (e.defaultPrevented || (editable(e.target) && !hasFiles(e))) return;
       e.preventDefault();
       if (e.dataTransfer) e.dataTransfer.dropEffect = "none";
     };
     const onDrop = (e: globalThis.DragEvent) => {
-      if (!editable(e.target)) e.preventDefault();
+      if (!editable(e.target) || hasFiles(e)) e.preventDefault();
     };
     window.addEventListener("dragover", onOver);
     window.addEventListener("drop", onDrop);

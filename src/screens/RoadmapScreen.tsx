@@ -3,7 +3,7 @@
 // 四半期を移すのは、カードのドラッグ（同じテーマの行のセルへ。ブラウザ標準）か、カードの［⋯］のメニュー（キーボード・スマホ）。
 // ドラッグで受け取るのは、このアプリのカードの値だけ（roadmap.ts）。移す先は落としたセルから取り、テーマを変えないことは placeProject でも確かめる。
 // 偏りや問題の判定はしない（並べるだけ。CLAUDE.md 4.3）
-import { useEffect, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { MenuButton } from "../components/MenuButton";
 import { Modal } from "../components/Modal";
 import { PlacementPicker } from "../components/ProjectForm";
@@ -27,6 +27,7 @@ const QUARTERS: Quarter[] = [1, 2, 3, 4];
 
 /** スマホの幅（720px 未満）ではドラッグを付けない（D19。長押しのドラッグがスクロールとぶつかるため） */
 function useNarrow(): boolean {
+  // CSS の組み替え（index.css のロードマップ）と同じ境目
   const query = "(max-width: 719.98px)";
   const get = () => typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia(query).matches;
   const [narrow, setNarrow] = useState(get);
@@ -40,11 +41,24 @@ function useNarrow(): boolean {
   return narrow;
 }
 
-/** メニューで移した後、移した先のカードにフォーカスを移す（表示の外へ移したときは見出しへ。docs/design.md 3.8） */
-function focusCard(id: string) {
+const cardSelector = (id: string) => `[data-card-id="${CSS.escape(id)}"]`;
+
+/** 移す前のカードの場所（表のセル、または表の下のたたんだ一覧）。移した先が見えないときに、フォーカスをここへ戻す */
+function originOf(id: string): HTMLElement | null {
+  const container = document.querySelector<HTMLElement>(cardSelector(id))?.closest<HTMLElement>("td, details") ?? null;
+  return container instanceof HTMLDetailsElement ? container.querySelector<HTMLElement>("summary") : container;
+}
+
+/**
+ * メニューで移した後、移した先のカードにフォーカスを移す（docs/design.md 3.8）。
+ * 移した先が見えない（ほかの年度へ移した、たたんだ一覧へ入った）ときは、元の場所に置く（D16）
+ */
+function focusCard(id: string, origin: HTMLElement | null) {
   requestAnimationFrame(() => {
-    const el = document.querySelector<HTMLElement>(`[data-card-id="${CSS.escape(id)}"] .roadmap-card__name`) ?? document.querySelector<HTMLElement>("main h1");
-    el?.focus();
+    const el = document.querySelector<HTMLElement>(`${cardSelector(id)} .roadmap-card__name`);
+    // たたんだ一覧（閉じた details）の中は、要素があってもフォーカスを置けない
+    const visible = el !== null && el.closest("details:not([open])") === null && el.getClientRects().length > 0;
+    (visible ? el : origin?.isConnected ? origin : document.querySelector<HTMLElement>("main h1"))?.focus();
   });
 }
 
@@ -55,6 +69,7 @@ export function RoadmapScreen({ state, now, disabledReason, onPlace }: Props) {
   /** ドラッグ中のカード（落とせるセルを枠で示すため。落としたときの値は使わず、DataTransfer から読み直す） */
   const [dragging, setDragging] = useState<Project | null>(null);
   const [otherYear, setOtherYear] = useState<Project | null>(null);
+  const otherYearOrigin = useRef<HTMLElement | null>(null);
   const narrow = useNarrow();
   const canDrag = !narrow && disabledReason === null;
 
@@ -65,9 +80,10 @@ export function RoadmapScreen({ state, now, disabledReason, onPlace }: Props) {
   const isCurrent = (q: Quarter) => cur.fiscalYear === fy && cur.quarter === q;
 
   const place = (p: Project, placement: Placement | null, expectedThemeId?: ThemeId, fromMenu = false) => {
+    const origin = fromMenu ? originOf(p.id) : null;
     const e = onPlace(p.id, placement, expectedThemeId);
     setError(e);
-    if (e === null && fromMenu) focusCard(p.id);
+    if (e === null && fromMenu) focusCard(p.id, origin);
     return e;
   };
 
@@ -79,7 +95,10 @@ export function RoadmapScreen({ state, now, disabledReason, onPlace }: Props) {
     onDragStart: () => setDragging(p),
     onDragEnd: () => setDragging(null),
     onMenuPlace: (placement) => place(p, placement, undefined, true),
-    onOtherYear: () => setOtherYear(p),
+    onOtherYear: () => {
+      otherYearOrigin.current = originOf(p.id);
+      setOtherYear(p);
+    },
   });
 
   /** セルに落とせるか（このアプリのカードで、同じテーマの行のときだけ） */
@@ -132,6 +151,8 @@ export function RoadmapScreen({ state, now, disabledReason, onPlace }: Props) {
                 return (
                   <td
                     key={q}
+                    // 移した先が見えないとき、フォーカスを置けるように（focusCard）
+                    tabIndex={-1}
                     className={cls}
                     data-label={`${quarterLabel(fy, q, { short: true })}${isCurrent(q) ? "・今の四半期" : ""}`}
                     onDragOver={(e) => {
@@ -213,7 +234,7 @@ export function RoadmapScreen({ state, now, disabledReason, onPlace }: Props) {
             if (e === null) {
               setOtherYear(null);
               setError(null);
-              focusCard(p.id);
+              focusCard(p.id, otherYearOrigin.current);
             }
             return e;
           }}

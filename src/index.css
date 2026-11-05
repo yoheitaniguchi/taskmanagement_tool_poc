@@ -1954,7 +1954,13 @@ body:has(.undo-bar) .app {
 }
 
 .roadmap-card--done {
-  opacity: 0.6;
+  background: var(--surface-2);
+  border-style: dashed;
+}
+
+/* 薄くしすぎない（文字は --text-muted 以上の濃さを保つ。docs/design.md 7章） */
+.roadmap-card--done .roadmap-card__name {
+  color: var(--text-muted);
 }
 
 .roadmap-card__done {
@@ -2003,8 +2009,8 @@ body:has(.undo-bar) .app {
   max-width: 100%;
 }
 
-/* スマホでは、テーマごとのブロックに4つの四半期を縦に並べる（docs/design.md 3.8） */
-@media (max-width: 720px) {
+/* スマホでは、テーマごとのブロックに4つの四半期を縦に並べる（docs/design.md 3.8）。境目は画面のドラッグの判定（RoadmapScreen）と同じ */
+@media (max-width: 719.98px) {
   .roadmap,
   .roadmap tbody,
   .roadmap tr,

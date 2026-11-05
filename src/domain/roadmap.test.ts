@@ -57,8 +57,13 @@ describe("並べるだけの関数（docs/design.md 3.8）", () => {
     const s = demoState();
     expect(activeProjectsPlacedBefore(s, 2026).map((p) => p.name)).toEqual(["架空の前年度の健康", "架空の前年度からの続き"]);
     expect(activeProjectsPlacedBefore(s, 2025)).toEqual([]);
-    // 2027年度から見ると、2026年度に置いた進行中のものも入る（完了したものは入らない）
-    expect(activeProjectsPlacedBefore(s, 2027).every((p) => p.status === "active")).toBe(true);
+    // 2027年度から見ると、2026年度に置いた進行中のものも入る（完了したもの・2027年度のものは入らない）
+    const from2027 = activeProjectsPlacedBefore(s, 2027).map((p) => p.name);
+    expect(from2027.slice(0, 2)).toEqual(["架空の前年度の健康", "架空の前年度からの続き"]);
+    expect(from2027).toContain("架空の仕事A");
+    expect(from2027).not.toContain("架空の仕事E（完了）");
+    expect(from2027).not.toContain("架空の仕事F");
+    expect(from2027).not.toContain("架空の次の年度の仕事");
   });
 });
 
