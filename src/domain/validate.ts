@@ -35,6 +35,8 @@ export const LIMITS = {
   itemsPerList: 10_000,
   /** 年次目標の件数（100年度 × 7テーマ） */
   annualGoals: (FISCAL_YEAR_MAX - FISCAL_YEAR_MIN + 1) * 7,
+  /** 1つの四半期シートの重点テーマの数（CLAUDE.md 5.3） */
+  focusThemes: 3,
   /** 四半期シートの件数（100年度 × 4四半期） */
   quarterSheets: (FISCAL_YEAR_MAX - FISCAL_YEAR_MIN + 1) * 4,
   /** 状態全体を JSON にしたときの文字数 */
@@ -388,8 +390,8 @@ function readQuarterSheet(r: Reader, v: unknown, path: string): QuarterSheet | n
   const raw = rec.focusThemeIds;
   if (!Array.isArray(raw)) {
     r.fail(path, "重点テーマが一覧ではありません");
-  } else if (raw.length > 3) {
-    r.fail(path, `重点テーマが多すぎます（${raw.length}つ。上限は3つ）`);
+  } else if (raw.length > LIMITS.focusThemes) {
+    r.fail(path, `重点テーマが多すぎます（${raw.length}つ。上限は${LIMITS.focusThemes}つ）`);
   } else {
     for (const t of raw) {
       if (!isThemeId(t)) r.fail(path, "重点テーマに正しくないテーマがあります");

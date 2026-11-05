@@ -1699,3 +1699,148 @@ body:has(.undo-bar) .app {
   border-color: var(--danger-border);
   background: var(--danger-bg);
 }
+
+/* ---- 年次目標・四半期シート（docs/design.md 3.7） ---- */
+.plan-year {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.plan-year__label {
+  margin: 0;
+  font-weight: 600;
+}
+
+@media (min-width: 721px) {
+  /* 年次目標の文章が読めるよう、表を画面の幅いっぱいにする（スマホではカードの並び） */
+  .plan-goals {
+    display: table;
+    width: 100%;
+  }
+}
+
+.plan-goals th[scope="row"] {
+  white-space: nowrap;
+}
+
+.plan-goals td {
+  vertical-align: top;
+}
+
+.plan-text__empty {
+  color: var(--text-muted);
+}
+
+.plan-placed,
+.plan-sheet__projects {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.plan-sheets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.page section.plan-sheet {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  min-width: 0;
+}
+
+/* 今の四半期は、枠を太くし、文字でも示す（色だけに頼らない。CLAUDE.md 7.1） */
+.page section.plan-sheet--current {
+  border: 3px solid var(--accent);
+}
+
+.plan-sheet h3 {
+  margin-top: 0;
+}
+
+.plan-sheet h4 {
+  margin: 16px 0 4px;
+  font-size: 0.95rem;
+}
+
+.plan-sheet__now {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.plan-sheet__focus {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.plan-sheet__focus legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.plan-sheet__projects li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.plan-sheet__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.plan-place {
+  margin-top: 8px;
+}
+
+.plan-place label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.plan-place__row {
+  display: flex;
+  gap: 8px;
+}
+
+.plan-place__row button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.plan-place__row select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .plan-sheets {
+    grid-template-columns: 1fr;
+  }
+
+  /* 押し間違えないよう、行の中の［編集］［外す］も押せる大きさにする（docs/design.md 7章） */
+  .plan-text .link-button,
+  .plan-sheet__projects .link-button {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  /* カードの並びでも、年次目標の本文は「未記入」と見分けられる普通の文字にする */
+  .plan-goals td[data-label="年次目標"] {
+    color: var(--text);
+    font-size: 1rem;
+  }
+}

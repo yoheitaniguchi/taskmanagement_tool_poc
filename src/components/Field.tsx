@@ -16,7 +16,7 @@ export function Field({ name, spec, value, onChange, autoFocus }: { name: string
         {spec.label} <FieldMark required={spec.required} />
       </label>
       {spec.multiline ? (
-        <textarea id={id} value={value} aria-required={spec.required} onChange={(e) => onChange(e.target.value)} />
+        <textarea id={id} value={value} aria-required={spec.required} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
       ) : (
         <input id={id} type="text" value={value} aria-required={spec.required} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
       )}
