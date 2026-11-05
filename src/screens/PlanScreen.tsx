@@ -2,7 +2,7 @@
 // 年度の切替、年次目標の表（年度 × テーマ）、4つの四半期シート（重点テーマ・主要プロジェクト・やらないこと）。
 // 主要プロジェクトは「その四半期に置いたプロジェクト」で、ここから置く・外すこともできる（5.1。変えるのは placeProject だけ）。
 // 状態の表示だけを置き、空欄は「未記入」と出すだけにする（警告しない。CLAUDE.md 4.3・12.2）
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Field } from "../components/Field";
 import { currentQuarter, FISCAL_YEAR_MAX, FISCAL_YEAR_MIN, fiscalYearLabel, quarterLabel, quarterMonths } from "../domain/fiscal";
 import { FOCUS_MAX, PLAN_FIELDS } from "../domain/plan";
@@ -146,11 +146,25 @@ function TextCell({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(text ?? "");
   const [error, setError] = useState<string | null>(null);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const refocus = useRef(false);
+  useEffect(() => {
+    // 入力欄を閉じたら、フォーカスを［編集］に戻す（キーボードで操作していても位置を見失わないように）
+    if (!editing && refocus.current) {
+      refocus.current = false;
+      editButton.current?.focus();
+    }
+  }, [editing]);
+  const close = () => {
+    refocus.current = true;
+    setEditing(false);
+  };
   if (!editing) {
     return (
       <div className="plan-text">
         <span className={text === null || text === "" ? "plan-text__empty" : "pre-wrap"}>{text === null || text === "" ? "未記入" : text}</span>{" "}
         <button
+          ref={editButton}
           type="button"
           className="link-button"
           aria-label={editLabel}
@@ -174,13 +188,13 @@ function TextCell({
         e.preventDefault();
         const err = onSave(value);
         setError(err);
-        if (err === null) setEditing(false);
+        if (err === null) close();
       }}
       onKeyDown={(e) => {
-        if (e.key === "Escape") setEditing(false);
+        if (e.key === "Escape") close();
       }}
     >
-      <Field name="plan-text" spec={spec} value={value} onChange={setValue} />
+      <Field name="plan-text" spec={spec} value={value} onChange={setValue} autoFocus />
       <p className="hint">{description}</p>
       {error !== null && (
         <p className="message--error" role="alert">
@@ -191,7 +205,7 @@ function TextCell({
         <button type="submit" className="button--primary" disabled={blocked !== null}>
           保存
         </button>
-        <button type="button" onClick={() => setEditing(false)}>
+        <button type="button" onClick={close}>
           キャンセル
         </button>
       </div>
@@ -280,7 +294,7 @@ function QuarterSheetCard({
           ))}
         </ul>
       )}
-      <PlaceForm fiscalYear={fy} quarter={q} projects={projects} blocked={blocked} onPlace={(id) => handlers.onPlaceProject(id, { fiscalYear: fy, quarter: q })} onError={setError} />
+      <PlaceForm fiscalYear={fy} quarter={q} projects={projects} blocked={blocked} onPlace={(id) => handlers.onPlaceProject(id, { fiscalYear: fy, quarter: q })} />
 
       <h4>やらないこと</h4>
       <TextCell
@@ -302,16 +316,15 @@ function PlaceForm({
   projects,
   blocked,
   onPlace,
-  onError,
 }: {
   fiscalYear: number;
   quarter: Quarter;
   projects: readonly Project[];
   blocked: string | null;
   onPlace: (id: string) => string | null;
-  onError: (e: string | null) => void;
 }) {
   const [selected, setSelected] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const selectId = `plan-place-${q}`;
   const here = (p: Project) => p.placement?.fiscalYear === fy && p.placement.quarter === q;
   const from = (p: Project) =>
@@ -319,7 +332,8 @@ function PlaceForm({
   const groups = THEMES.map((t) => ({ theme: t, list: projects.filter((p) => p.status === "active" && p.themeId === t.id && !here(p)).sort((a, b) => a.name.localeCompare(b.name, "ja")) })).filter(
     (g) => g.list.length > 0,
   );
-  if (groups.length === 0) return null;
+  // 置けるものが無いときは、状態だけを示す（指示ではない。CLAUDE.md 4.3）
+  if (groups.length === 0) return <p className="hint">ほかに置ける進行中のプロジェクトはありません</p>;
   return (
     <form
       className="plan-place"
@@ -327,7 +341,7 @@ function PlaceForm({
         e.preventDefault();
         if (selected === "") return;
         const err = onPlace(selected);
-        onError(err);
+        setError(err);
         if (err === null) setSelected("");
       }}
     >
@@ -350,6 +364,11 @@ function PlaceForm({
           置く
         </button>
       </div>
+      {error !== null && (
+        <p className="message--error" role="alert">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

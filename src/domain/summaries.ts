@@ -1,4 +1,5 @@
 // 数えて並べるだけの関数（docs/design.md 4.5）。「問題かどうか」の判定はしない（CLAUDE.md 4.3）
+import { quarterSheetFor } from "./plan";
 import { THEMES, type ThemeId } from "./themes";
 import type { AppState, Placement, Project, Quarter, QuarterSheet } from "./types";
 
@@ -103,7 +104,7 @@ export interface QuarterOverview {
 }
 
 export function quarterOverview(state: AppState, fiscalYear: number, quarter: Quarter): QuarterOverview {
-  const sheet = state.quarterSheets.find((s) => s.fiscalYear === fiscalYear && s.quarter === quarter) ?? null;
+  const sheet = quarterSheetFor(state, fiscalYear, quarter);
   const projects = state.projects
     .filter((p) => p.placement?.fiscalYear === fiscalYear && p.placement.quarter === quarter)
     .sort((a, b) => byTheme(a, b) || byName(a, b));

@@ -1817,6 +1817,7 @@ body:has(.undo-bar) .app {
 }
 
 .plan-place__row button {
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
@@ -1828,5 +1829,18 @@ body:has(.undo-bar) .app {
 @media (max-width: 720px) {
   .plan-sheets {
     grid-template-columns: 1fr;
+  }
+
+  /* 押し間違えないよう、行の中の［編集］［外す］も押せる大きさにする（docs/design.md 7章） */
+  .plan-text .link-button,
+  .plan-sheet__projects .link-button {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  /* カードの並びでも、年次目標の本文は「未記入」と見分けられる普通の文字にする */
+  .plan-goals td[data-label="年次目標"] {
+    color: var(--text);
+    font-size: 1rem;
   }
 }

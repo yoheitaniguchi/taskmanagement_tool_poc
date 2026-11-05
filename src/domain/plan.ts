@@ -13,12 +13,12 @@ import { LIMITS } from "./validate";
 
 /** 入力欄の決まり（保存の検証 validate.ts と同じ上限） */
 export const PLAN_FIELDS = {
-  goal: { label: "年次目標", max: LIMITS.longTextLength, required: false, multiline: true },
+  goal: { label: "到達状態", max: LIMITS.longTextLength, required: false, multiline: true },
   wontDo: { label: "やらないこと", max: LIMITS.longTextLength, required: false, multiline: true },
 } as const satisfies Record<string, FieldSpec>;
 
-/** 1つの年度に選べる重点テーマの数（CLAUDE.md 5.3） */
-export const FOCUS_MAX = 3;
+/** 1つの四半期シートに選べる重点テーマの数（CLAUDE.md 5.3。保存の検証と同じ値） */
+export const FOCUS_MAX = LIMITS.focusThemes;
 
 function checkYear(fiscalYear: unknown): Fail | null {
   return isFiscalYear(fiscalYear) ? null : fail("年度が正しくありません");
@@ -57,6 +57,7 @@ export function setAnnualGoal(state: AppState, fiscalYear: number, themeId: Them
     const next: AnnualGoal = { ...current, text: t.value, updatedAt: stampFor(current, now) };
     return checkSize({ ...state, annualGoals: state.annualGoals.map((g) => (g === current ? next : g)) });
   }
+  // 年度の範囲と「年度 × テーマで1件」で、件数は LIMITS.annualGoals（700件）を超えない。念のため置き場と同じ確認も通す
   const ce = checkCount(state.annualGoals, "年次目標");
   if (ce) return ce;
   const at = now.toISOString();
@@ -78,6 +79,7 @@ function updateSheet(
   if (!isQuarter(quarter)) return fail("四半期が正しくありません");
   const current = quarterSheetFor(state, fiscalYear, quarter);
   if (current === null) {
+    // 年度の範囲と「年度 × 四半期で1件」で、件数は LIMITS.quarterSheets（400件）を超えない
     const ce = checkCount(state.quarterSheets, "四半期シート");
     if (ce) return ce;
   }

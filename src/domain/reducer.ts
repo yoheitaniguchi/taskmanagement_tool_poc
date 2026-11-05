@@ -74,11 +74,14 @@ export type Action =
   | { type: "addWaitingToProject"; projectId: string; input: { text: string; party: string; requestedOn: string }; at: string; id: string }
   /** 置き場の間の移動（docs/design.md 4.3。「元に戻す」を出す。D1） */
   | { type: "moveItem"; source: MoveRef; target: PlaceKind; input: MoveInput; at: string }
-  /** 「元に戻す」の表示を閉じる */
-  /** 年次目標を書く（空なら消す）・重点テーマを選ぶ／外す・やらないことを書く（docs/design.md 3.7。「元に戻す」は出さない） */
+  /**
+   * 年次目標を書く（空なら消す）・重点テーマを選ぶ／外す・やらないことを書く（docs/design.md 3.7）。
+   * 「元に戻す」は、年次目標を消したときだけ出す（削除の直後と同じ。D1）
+   */
   | { type: "setAnnualGoal"; fiscalYear: number; themeId: ThemeId; text: string; at: string; id: string }
   | { type: "toggleFocusTheme"; fiscalYear: number; quarter: Quarter; themeId: ThemeId; at: string; id: string }
   | { type: "setWontDo"; fiscalYear: number; quarter: Quarter; text: string; at: string; id: string }
+  /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
   | { type: "forgetUndo" };
@@ -179,7 +182,12 @@ export function reducer(root: Root, action: Action): Root {
         applyResult(root, moveItem(root.state, action.source, action.target, action.input, now), `${PLACE_LABELS[action.target] ?? ""}に移しました`),
       );
     case "setAnnualGoal":
-      return timed(root, action.at, (now) => applyResult(root, setAnnualGoal(root.state, action.fiscalYear, action.themeId, action.text, now, () => action.id), null));
+      return timed(root, action.at, (now) => {
+        const result = setAnnualGoal(root.state, action.fiscalYear, action.themeId, action.text, now, () => action.id);
+        // 消えたかどうかは前後の件数で見る（文章を長く書いた年次目標を誤って消しても救えるように）
+        const removed = result.ok && result.state.annualGoals.length < root.state.annualGoals.length;
+        return applyResult(root, result, removed ? "年次目標を消しました" : null);
+      });
     case "toggleFocusTheme":
       return timed(root, action.at, (now) => applyResult(root, toggleFocusTheme(root.state, action.fiscalYear, action.quarter, action.themeId, now, () => action.id), null));
     case "setWontDo":

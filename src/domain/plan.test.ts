@@ -87,7 +87,7 @@ describe("年次目標（年度 × テーマで1件。到達状態を空にし�
 
   it("2,000字まで。年度の範囲（2000〜2099）・知らないテーマ・型の外の値は失敗にする", () => {
     expect(ok(setAnnualGoal(emptyState(), 2026, "health", "あ".repeat(LIMITS.longTextLength), NOW, uuid)).annualGoals).toHaveLength(1);
-    expect(err(setAnnualGoal(emptyState(), 2026, "health", "あ".repeat(LIMITS.longTextLength + 1), NOW, uuid))).toBe("年次目標は2,000字までです（今 2,001字）");
+    expect(err(setAnnualGoal(emptyState(), 2026, "health", "あ".repeat(LIMITS.longTextLength + 1), NOW, uuid))).toBe("到達状態は2,000字までです（今 2,001字）");
     expect(err(setAnnualGoal(emptyState(), 1999, "health", "x", NOW, uuid))).toBe("年度が正しくありません");
     expect(err(setAnnualGoal(emptyState(), 2100, "health", "x", NOW, uuid))).toBe("年度が正しくありません");
     expect(ok(setAnnualGoal(emptyState(), 2000, "health", "x", NOW, uuid)).annualGoals).toHaveLength(1);
@@ -174,6 +174,11 @@ describe("四半期シート（年度 × 四半期で1件。重点テーマは�
     expect(r3.state.annualGoals).toHaveLength(1);
     expect(r3.state.quarterSheets[0]).toMatchObject({ focusThemeIds: ["work"], wontDo: "やらない" });
     expect(r3.undo).toBeNull();
+    // 年次目標を消したときだけ「元に戻す」を出し、戻すと消す前に戻る
+    const r4 = reducer(r3, { type: "setAnnualGoal", fiscalYear: 2026, themeId: "work", text: " ", at: AT, id: uuid() });
+    expect(r4.state.annualGoals).toEqual([]);
+    expect(r4.undo?.message).toBe("年次目標を消しました");
+    expect(reducer(r4, { type: "undo" }).state).toBe(r3.state);
     expect(reducer(root, { type: "setWontDo", fiscalYear: 2026, quarter: 3, text: "x", at: "読めない", id: uuid() })).toBe(root);
   });
 });
