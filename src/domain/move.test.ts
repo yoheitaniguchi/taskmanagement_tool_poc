@@ -59,16 +59,51 @@ const LIST = { action: "actions", waiting: "waitingFors", project: "projects", s
 type AnyItem = { id: string; createdAt: string; capturedAt: string | null; movedAt: string | null; updatedAt: string };
 const find = (state: AppState, kind: PlaceKind, id: string) => (state[LIST[kind]] as readonly AnyItem[]).find((x) => x.id === id);
 
+// 移動の表（docs/design.md 4.3）の各マスで、移動先に入る中身。移動元は setup() の
+// lone（単独・テーマ「健康」）、w（親のプロジェクトに属する）、movable（完了した子を持つ）、s、r。入力は input()
+const AN = "アクションのメモ";
+const WN = "連絡待ちのメモ\n相手：テスト相手（依頼日 2026-11-01）";
+const PN = "プロジェクトのメモ\n目的とする成果：テストの成果";
+const SN = "いつかのメモ";
+const RB = "資料の本文";
+const toAction = (note: string, themeId: string | null, projectId: "parent" | null = null) => ({ text: "移した内容", note, themeId, projectId, status: "todo", completedAt: null });
+const toWaiting = (note: string) => ({ text: "移した内容", party: "移した相手", requestedOn: "2026-11-05", projectId: null, status: "waiting", completedAt: null, note });
+const toProject = (note: string) => ({ name: "移した内容", outcome: "移した成果", themeId: "finance", placement: null, status: "active", completedAt: null, note });
+const toSomeday = (note: string) => ({ text: "移した内容", note });
+const toReference = (body: string) => ({ title: "移した内容", body });
+const CONTENT: Record<PlaceKind, Partial<Record<PlaceKind, Record<string, unknown>>>> = {
+  // 単独のアクションのテーマは、プロジェクトへ移すときだけ入力のテーマに変わり、ほかでは捨てる
+  action: { waiting: toWaiting(AN), project: toProject(AN), someday: toSomeday(AN), reference: toReference(AN) },
+  // 属するプロジェクトは次のアクションへ移すときだけ引き継ぎ（下の it で確かめる）、相手・依頼日は書き足す
+  waiting: { action: { text: "移した内容", note: WN, themeId: null, status: "todo" }, project: toProject(WN), someday: toSomeday(WN), reference: toReference(WN) },
+  // 目的とする成果は書き足し、テーマは次のアクションへ移すときだけ引き継ぐ。資料の本文は成果を先に置く
+  project: { action: toAction(PN, "work"), waiting: toWaiting(PN), someday: toSomeday(PN), reference: toReference("目的とする成果：テストの成果\nプロジェクトのメモ") },
+  // 単独の次のアクションへ移すときは、入力のテーマを任意で持てる
+  someday: { action: toAction(SN, "finance"), waiting: toWaiting(SN), project: toProject(SN), reference: toReference(SN) },
+  // 資料の本文はメモになる
+  reference: { action: toAction(RB, "finance"), waiting: toWaiting(RB), project: toProject(RB), someday: toSomeday(RB) },
+};
+const META = { id: "", createdAt: "", updatedAt: "", capturedAt: null, movedAt: null };
+const SHAPE: Record<PlaceKind, object> = {
+  action: { ...META, text: "", projectId: null, themeId: null, status: "", completedAt: null, note: "" },
+  waiting: { ...META, text: "", party: "", requestedOn: "", projectId: null, status: "", completedAt: null, note: "" },
+  project: { ...META, name: "", outcome: "", themeId: "", placement: null, status: "", completedAt: null, note: "" },
+  someday: { ...META, text: "", note: "" },
+  reference: { ...META, title: "", body: "" },
+};
+
 describe("移動の表の全マス（docs/design.md 4.3）", () => {
   const KINDS: PlaceKind[] = ["action", "waiting", "project", "someday", "reference"];
   for (const from of KINDS) {
     for (const to of moveTargets(from)) {
-      it(`${from} → ${to}：id・作成日時・収集日時を引き継ぎ、移動日時と更新日時を記録する`, () => {
+      it(`${from} → ${to}：id・作成日時・収集日時を引き継ぎ、移動日時と更新日時を記録し、中身は表のとおり`, () => {
         const f = setup();
         const id = { action: f.lone.id, waiting: f.w.id, project: f.movable.id, someday: f.s.id, reference: f.r.id }[from];
         const next = ok(moveItem(f.state, { kind: from, id }, to, input(), NOW));
         expect(find(next, from, id)).toBeUndefined();
-        expect(find(next, to, id)).toMatchObject({ id, createdAt: T0, capturedAt: T0, movedAt: AT, updatedAt: AT });
+        expect(find(next, to, id)).toMatchObject({ id, createdAt: T0, capturedAt: T0, movedAt: AT, updatedAt: AT, ...CONTENT[from][to] });
+        // 移動先に無い属性（テーマ・属するプロジェクトなど）を持ち越さない
+        expect(Object.keys(find(next, to, id) ?? {}).sort()).toEqual(Object.keys(SHAPE[to]).sort());
       });
     }
   }
@@ -212,7 +247,20 @@ describe("移動の画面に出すもの", () => {
     expect(droppedOnMove(f.state, { kind: "action", id: f.a.id }, "waiting")).toEqual([]);
     expect(droppedOnMove(f.state, { kind: "action", id: f.lone.id }, "waiting")).toEqual(["テーマ"]);
     expect(droppedOnMove(f.state, { kind: "project", id: f.movable.id }, "action")).toEqual(["置いた四半期", "完了した次のアクション・連絡待ちとのつながり（単独のものとして残ります）"]);
-    expect(appendedOnMove({ kind: "waiting", id: f.w.id }, "action")).toBe("相手・依頼日をメモの末尾に書き足します");
-    expect(appendedOnMove({ kind: "someday", id: f.s.id }, "action")).toBeNull();
+    expect(appendedOnMove(f.state, { kind: "waiting", id: f.w.id }, "action")).toBe("相手・依頼日をメモの末尾に書き足します");
+    expect(appendedOnMove(f.state, { kind: "waiting", id: f.w.id }, "reference")).toBe("メモは本文に入れ、相手・依頼日を本文の末尾に書き足します");
+    expect(appendedOnMove(f.state, { kind: "project", id: f.movable.id }, "reference")).toBe("目的とする成果とメモを本文に入れます");
+    expect(appendedOnMove(f.state, { kind: "project", id: f.parent.id }, "reference")).toBe("目的とする成果を本文に入れます");
+    expect(appendedOnMove(f.state, { kind: "someday", id: f.s.id }, "action")).toBeNull();
+    expect(appendedOnMove(f.state, { kind: "someday", id: f.s.id }, "reference")).toBe("メモは本文に入れます");
+    expect(appendedOnMove(f.state, { kind: "action", id: f.lone.id }, "reference")).toBe("メモは本文に入れます");
+    expect(appendedOnMove(f.state, { kind: "reference", id: f.r.id }, "someday")).toBe("本文はメモに入れます");
+  });
+
+  it("メモ・本文が空なら、それを写すとは示さない", () => {
+    const empty = reference();
+    const s = { ...emptyState(), references: [{ ...empty, body: "" }], someday: [{ ...someday(), note: "" }] };
+    expect(appendedOnMove(s, { kind: "reference", id: empty.id }, "action")).toBeNull();
+    expect(appendedOnMove(s, { kind: "someday", id: s.someday[0].id }, "reference")).toBeNull();
   });
 });

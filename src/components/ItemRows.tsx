@@ -225,6 +225,7 @@ function EditFrame({
   onCancel,
   onDelete,
   move,
+  dirty,
   children,
 }: {
   title: string;
@@ -235,6 +236,8 @@ function EditFrame({
   onDelete: () => void;
   /** 移す画面の中身（完了したものは null で、［移す…］を出さない） */
   move: Omit<MoveProps, "ctx"> | null;
+  /** 書き換えて、まだ保存していない（移す画面は保存済みの内容を使うので、先に保存してもらう） */
+  dirty: boolean;
   children: ReactNode;
 }) {
   const [moving, setMoving] = useState(false);
@@ -265,7 +268,7 @@ function EditFrame({
             キャンセル
           </button>
           {move !== null && (
-            <button type="button" disabled={ctx.disabledReason !== null} onClick={() => setMoving(true)}>
+            <button type="button" disabled={ctx.disabledReason !== null || dirty} onClick={() => setMoving(true)}>
               移す…
             </button>
           )}
@@ -273,6 +276,7 @@ function EditFrame({
             削除
           </button>
         </div>
+        {move !== null && dirty && <p className="hint">書き換えた内容は、保存してから移してください。</p>}
       </form>
       {/* フォームの入れ子にならないよう、移す画面はフォームの外に置く */}
       {moving && move !== null && <MoveFromRow {...move} ctx={ctx} onClose={() => setMoving(false)} />}
@@ -366,6 +370,7 @@ function ActionEdit({ item, ctx, onClose }: { item: Action; ctx: RowContext; onC
       onCancel={onClose}
       onDelete={e.remove}
       move={item.status === "done" ? null : { source: { kind: "action", id: item.id }, text: item.text, themeId: item.themeId, projectId: item.projectId }}
+      dirty={text !== item.text || note !== item.note || projectId !== (item.projectId ?? "") || theme !== (item.themeId ?? "")}
       onSave={() =>
         e.save({ kind: "action", id: item.id, text, note, projectId: projectId === "" ? null : projectId, themeId: projectId === "" && isThemeId(theme) ? theme : null })
       }
@@ -408,6 +413,7 @@ function WaitingEdit({ item, ctx, onClose }: { item: WaitingFor; ctx: RowContext
       onCancel={onClose}
       onDelete={e.remove}
       move={item.status === "done" ? null : { source: { kind: "waiting", id: item.id }, text: item.text, themeId: null, projectId: item.projectId }}
+      dirty={text !== item.text || party !== item.party || requestedOn !== item.requestedOn || note !== item.note || projectId !== (item.projectId ?? "")}
       onSave={() => e.save({ kind: "waiting", id: item.id, text, party, requestedOn, note, projectId: projectId === "" ? null : projectId })}
     >
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
@@ -436,6 +442,7 @@ function SomedayEdit({ item, ctx, onClose }: { item: SomedayItem; ctx: RowContex
       onCancel={onClose}
       onDelete={e.remove}
       move={{ source: { kind: "someday", id: item.id }, text: item.text, themeId: null, projectId: null }}
+      dirty={text !== item.text || note !== item.note}
       onSave={() => e.save({ kind: "someday", id: item.id, text, note })}>
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
       <Field name="note" spec={FIELDS.note} value={note} onChange={setNote} />
@@ -455,6 +462,7 @@ function ReferenceEdit({ item, ctx, onClose }: { item: ReferenceItem; ctx: RowCo
       onCancel={onClose}
       onDelete={e.remove}
       move={{ source: { kind: "reference", id: item.id }, text: item.title, themeId: null, projectId: null }}
+      dirty={title !== item.title || body !== item.body}
       onSave={() => e.save({ kind: "reference", id: item.id, title, body })}>
       <Field name="title" spec={FIELDS.title} value={title} onChange={setTitle} autoFocus />
       <Field name="body" spec={FIELDS.body} value={body} onChange={setBody} />

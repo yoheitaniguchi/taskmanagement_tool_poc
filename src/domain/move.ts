@@ -243,12 +243,35 @@ export function droppedOnMove(state: AppState, source: MoveRef, target: PlaceKin
   return out;
 }
 
-/** 移すと書き足されるもの（移動の画面に出す） */
-export function appendedOnMove(source: MoveRef, target: PlaceKind): string | null {
-  if (source.kind === "waiting") return target === "reference" ? "相手・依頼日を本文の末尾に書き足します" : "相手・依頼日をメモの末尾に書き足します";
-  if (source.kind === "project") return target === "reference" ? "目的とする成果を本文に入れます" : "目的とする成果をメモの末尾に書き足します";
-  if (source.kind === "reference" && target !== "reference") return "本文はメモに入れます";
-  return null;
+/**
+ * 移すと書き足されるもの・写されるもの（移動の画面に出す）。メモ・本文が空なら、それには触れない
+ */
+export function appendedOnMove(state: AppState, source: MoveRef, target: PlaceKind): string | null {
+  const toRef = target === "reference";
+  switch (source.kind) {
+    case "waiting": {
+      const hasNote = (state.waitingFors.find((x) => x.id === source.id)?.note ?? "") !== "";
+      if (!toRef) return "相手・依頼日をメモの末尾に書き足します";
+      return hasNote ? "メモは本文に入れ、相手・依頼日を本文の末尾に書き足します" : "相手・依頼日を本文に入れます";
+    }
+    case "project": {
+      const hasNote = (state.projects.find((x) => x.id === source.id)?.note ?? "") !== "";
+      if (!toRef) return "目的とする成果をメモの末尾に書き足します";
+      return hasNote ? "目的とする成果とメモを本文に入れます" : "目的とする成果を本文に入れます";
+    }
+    case "reference": {
+      const hasBody = (state.references.find((x) => x.id === source.id)?.body ?? "") !== "";
+      return hasBody ? "本文はメモに入れます" : null;
+    }
+    case "action":
+    case "someday": {
+      if (!toRef) return null;
+      const list: readonly { id: string; note: string }[] = source.kind === "action" ? state.actions : state.someday;
+      return (list.find((x) => x.id === source.id)?.note ?? "") !== "" ? "メモは本文に入れます" : null;
+    }
+    default:
+      return null;
+  }
 }
 
 /** 移す先の候補（同じ置き場のほか全部。表の全マスが「可」） */

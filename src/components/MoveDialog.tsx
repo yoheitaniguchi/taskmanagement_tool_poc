@@ -46,7 +46,7 @@ export function MoveDialog({ state, source, text: initialText, themeId: sourceTh
   const [error, setError] = useState<string | null>(null);
 
   const dropped = target ? droppedOnMove(state, source, target) : [];
-  const appended = target ? appendedOnMove(source, target) : null;
+  const appended = target ? appendedOnMove(state, source, target) : null;
   // 次のアクションへ移すとき、単独になるならテーマを任意で選べる（プロジェクトから移すときは、そのテーマを引き継ぐ）
   const standaloneTheme = target === "action" && source.kind !== "project" && !(source.kind === "waiting" && projectId !== null);
 
@@ -72,7 +72,13 @@ export function MoveDialog({ state, source, text: initialText, themeId: sourceTh
           </legend>
           {targets.map((t, i) => (
             <label key={t} className="chip">
-              <input type="radio" name="move-target" data-autofocus={i === 0 ? true : undefined} checked={target === t} onChange={() => setTarget(t)} />
+              <input type="radio" name="move-target" data-autofocus={i === 0 ? true : undefined} checked={target === t}
+                onChange={() => {
+                  setTarget(t);
+                  // 移動先ごとに意味が違う（プロジェクトのテーマは必須、単独の次のアクションは任意）ので、移動元のテーマに戻す
+                  setTheme(sourceTheme ?? "");
+                }}
+              />
               {PLACE_LABELS[t]}
             </label>
           ))}
