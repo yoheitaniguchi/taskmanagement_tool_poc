@@ -1,6 +1,6 @@
 // 数えて並べるだけの関数（docs/design.md 4.5）。「問題かどうか」の判定はしない（CLAUDE.md 4.3）
-import { THEMES } from "./themes";
-import type { AppState, Placement, Project } from "./types";
+import { THEMES, type ThemeId } from "./themes";
+import type { AppState, Placement, Project, Quarter, QuarterSheet } from "./types";
 
 export interface Counts {
   /** 収集箱の未処理 */
@@ -76,4 +76,36 @@ export function sortProjects<T extends { project: Project }>(list: readonly T[],
         ? (a: Project, b: Project) => byQuarter(a, b) || byTheme(a, b) || byName(a, b)
         : (a: Project, b: Project) => byName(a, b) || byTheme(a, b);
   return [...list].sort((x, y) => cmp(x.project, y.project));
+}
+
+/**
+ * 年次目標の表の「この年度に置いたプロジェクト」（docs/design.md 3.7）：テーマごとに、この年度のいずれかの四半期に置いたプロジェクト。
+ * 四半期の早い順 → 名前順。完了したものも含める（並べるだけ）
+ */
+export function placedProjectsByTheme(state: AppState, fiscalYear: number): Map<ThemeId, Project[]> {
+  const out = new Map<ThemeId, Project[]>(THEMES.map((t) => [t.id, []]));
+  const list = state.projects.filter((p) => p.placement?.fiscalYear === fiscalYear).sort((a, b) => byQuarter(a, b) || byName(a, b));
+  for (const p of list) out.get(p.themeId)?.push(p);
+  return out;
+}
+
+/** 四半期の概要（四半期シートとホームの「今の四半期」。docs/design.md 3.2・3.7）。数えて並べるだけ */
+export interface QuarterOverview {
+  fiscalYear: number;
+  quarter: Quarter;
+  /** シートがまだ無ければ null（画面では空のシートとして出す） */
+  sheet: QuarterSheet | null;
+  focusThemeIds: ThemeId[];
+  /** この四半期に置いたプロジェクト（主要プロジェクト）。テーマの表示順 → 名前順 */
+  projects: Project[];
+  /** そのうち完了したものの件数 */
+  doneCount: number;
+}
+
+export function quarterOverview(state: AppState, fiscalYear: number, quarter: Quarter): QuarterOverview {
+  const sheet = state.quarterSheets.find((s) => s.fiscalYear === fiscalYear && s.quarter === quarter) ?? null;
+  const projects = state.projects
+    .filter((p) => p.placement?.fiscalYear === fiscalYear && p.placement.quarter === quarter)
+    .sort((a, b) => byTheme(a, b) || byName(a, b));
+  return { fiscalYear, quarter, sheet, focusThemeIds: sheet?.focusThemeIds ?? [], projects, doneCount: projects.filter((p) => p.status === "done").length };
 }

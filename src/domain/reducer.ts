@@ -18,7 +18,8 @@ import {
   type ChildPolicy,
   type ProjectInput,
 } from "./projects";
-import { emptyState, type AppState, type OpResult, type Placement, type ThemeId } from "./types";
+import { setAnnualGoal, setWontDo, toggleFocusTheme } from "./plan";
+import { emptyState, type AppState, type OpResult, type Placement, type Quarter, type ThemeId } from "./types";
 import { validateState } from "./validate";
 
 /** 「元に戻す」で覚えておく、直前の1つの操作（保存はしない。docs/design.md 6.4） */
@@ -74,6 +75,10 @@ export type Action =
   /** 置き場の間の移動（docs/design.md 4.3。「元に戻す」を出す。D1） */
   | { type: "moveItem"; source: MoveRef; target: PlaceKind; input: MoveInput; at: string }
   /** 「元に戻す」の表示を閉じる */
+  /** 年次目標を書く（空なら消す）・重点テーマを選ぶ／外す・やらないことを書く（docs/design.md 3.7。「元に戻す」は出さない） */
+  | { type: "setAnnualGoal"; fiscalYear: number; themeId: ThemeId; text: string; at: string; id: string }
+  | { type: "toggleFocusTheme"; fiscalYear: number; quarter: Quarter; themeId: ThemeId; at: string; id: string }
+  | { type: "setWontDo"; fiscalYear: number; quarter: Quarter; text: string; at: string; id: string }
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
   | { type: "forgetUndo" };
@@ -173,6 +178,12 @@ export function reducer(root: Root, action: Action): Root {
       return timed(root, action.at, (now) =>
         applyResult(root, moveItem(root.state, action.source, action.target, action.input, now), `${PLACE_LABELS[action.target] ?? ""}に移しました`),
       );
+    case "setAnnualGoal":
+      return timed(root, action.at, (now) => applyResult(root, setAnnualGoal(root.state, action.fiscalYear, action.themeId, action.text, now, () => action.id), null));
+    case "toggleFocusTheme":
+      return timed(root, action.at, (now) => applyResult(root, toggleFocusTheme(root.state, action.fiscalYear, action.quarter, action.themeId, now, () => action.id), null));
+    case "setWontDo":
+      return timed(root, action.at, (now) => applyResult(root, setWontDo(root.state, action.fiscalYear, action.quarter, action.text, now, () => action.id), null));
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
