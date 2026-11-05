@@ -1,5 +1,5 @@
 // アプリの外枠（節目2）：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
-// 置き場の画面は、節目2の続きで足す（docs/plans/milestone-2.md 2章）
+// 年次目標・四半期シートとロードマップは、節目3で足す（docs/plans/milestone-2.md 2章）
 import { useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
@@ -12,6 +12,9 @@ import { StorageBanner } from "./components/StorageBanner";
 import { UndoBar } from "./components/UndoBar";
 import { capture } from "./domain/capture";
 import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
+import { completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
+import type { OpResult } from "./domain/types";
+import type { RowContext } from "./components/ItemRows";
 import { backupFileName } from "./domain/persistence";
 import { counts } from "./domain/summaries";
 import { downloadText } from "./files";
@@ -20,6 +23,9 @@ import { HomeScreen } from "./screens/HomeScreen";
 import { ClarifyFlow } from "./screens/ClarifyFlow";
 import { InboxScreen } from "./screens/InboxScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
+import { PlaceListScreen } from "./screens/PlaceListScreen";
+import { ProjectDetailScreen } from "./screens/ProjectDetailScreen";
+import { ProjectsScreen } from "./screens/ProjectsScreen";
 import { usePersistedState } from "./state/usePersistedState";
 import { useRoute } from "./state/useRoute";
 
@@ -81,8 +87,8 @@ export default function App() {
     return result.ok ? "このタブでは入れられません" : result.error;
   };
 
-  /** 明確化・一括振り分けを使えない理由（収集と同じ。docs/design.md 6.3） */
-  const clarifyBlocked = readOnly
+  /** 明確化・置き場の変更を使えない理由（収集と同じ。docs/design.md 6.3） */
+  const changeBlocked = readOnly
     ? "このタブは読み取り専用です（別のタブで変更されたため）"
     : store.status.corrupt !== null && !store.status.recovered
       ? "保存データを読めなかったため、自動保存を止めています。上の帯の操作で直すと振り分けられます"
@@ -108,6 +114,35 @@ export default function App() {
     return result.ok ? "このタブでは振り分けられません" : result.error;
   };
 
+  /**
+   * 操作を反映する。できなければ理由を返す（ドメインの関数で確かめ直す。読み取り専用になった直後など、関数の外の理由もある）
+   */
+  const run = (action: Parameters<typeof store.dispatch>[0], recheck: () => OpResult): string | null => {
+    if (store.dispatch(action)) return null;
+    const result = recheck();
+    return result.ok ? "このタブでは変更できません" : result.error;
+  };
+
+  /** 置き場の一覧・プロジェクトの詳細の行で使う操作（docs/design.md 3.3） */
+  const rowCtx: Omit<RowContext, "showProject"> = {
+    projects: state.projects,
+    now,
+    disabledReason: changeBlocked,
+    onEdit: (edit) => {
+      const at = new Date();
+      return run({ type: "editItem", edit, at: at.toISOString() }, () => editItem(state, edit, at));
+    },
+    onComplete: (ref) => {
+      const at = new Date();
+      return run({ type: "completeItem", ref, at: at.toISOString() }, () => completeItem(state, ref, at));
+    },
+    onUncomplete: (ref) => {
+      const at = new Date();
+      return run({ type: "uncompleteItem", ref, at: at.toISOString() }, () => uncompleteItem(state, ref, at));
+    },
+    onDelete: (ref) => run({ type: "deleteItem", ref }, () => deleteItem(state, ref)),
+  };
+
   const undo = store.root.undo;
   const onUndo = () => {
     store.dispatch({ type: "undo" });
@@ -126,12 +161,25 @@ export default function App() {
             projects={state.projects}
             step={route.clarifyStep}
             now={now}
-            disabledReason={clarifyBlocked}
+            disabledReason={changeBlocked}
             onClarify={onClarify}
           />
         ) : (
-          <InboxScreen items={state.inbox} now={now} disabledReason={clarifyBlocked} onBulk={onBulk} />
+          <InboxScreen items={state.inbox} now={now} disabledReason={changeBlocked} onBulk={onBulk} />
         );
+      case "next":
+        return <PlaceListScreen kind="action" state={state} ctx={rowCtx} />;
+      case "waiting":
+        return <PlaceListScreen kind="waiting" state={state} ctx={rowCtx} />;
+      case "someday":
+        return <PlaceListScreen kind="someday" state={state} ctx={rowCtx} />;
+      case "reference":
+        return <PlaceListScreen kind="reference" state={state} ctx={rowCtx} />;
+      case "projects": {
+        // id が無い（削除した・別の端末のURL）ときは一覧を出す（D14）
+        const project = route.projectId === null ? undefined : state.projects.find((p) => p.id === route.projectId);
+        return project ? <ProjectDetailScreen key={project.id} project={project} state={state} ctx={rowCtx} /> : <ProjectsScreen state={state} />;
+      }
       default:
         return <PlaceholderScreen title={screenLabel(route.screen)} />;
     }

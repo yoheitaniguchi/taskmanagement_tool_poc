@@ -14,6 +14,20 @@ export function formatDateTime(iso: string, now: Date): string {
   return d.getFullYear() === now.getFullYear() ? `${date} ${time}` : `${d.getFullYear()}/${date} ${time}`;
 }
 
+/** 日付だけ「11/3」（今と年が違うときは「2025/11/3」）。日時（ISO）は端末のタイムゾーンで、依頼日（YYYY-MM-DD）はそのまま読む */
+export function formatDate(value: string, now: Date): string {
+  let y: number, mo: number, da: number;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (m) {
+    [y, mo, da] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  } else {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+    [y, mo, da] = [d.getFullYear(), d.getMonth() + 1, d.getDate()];
+  }
+  return y === now.getFullYear() ? `${mo}/${da}` : `${y}/${mo}/${da}`;
+}
+
 /** 時刻だけ「20:16」 */
 export function formatTime(iso: string): string {
   const d = new Date(iso);

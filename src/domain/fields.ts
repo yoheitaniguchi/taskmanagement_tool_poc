@@ -17,6 +17,9 @@ export const FIELDS = {
   projectName: { label: "プロジェクトの名称", max: LIMITS.nameLength, required: true, multiline: false },
   outcome: { label: "目的とする成果", max: LIMITS.longTextLength, required: true, multiline: true },
   party: { label: "相手", max: LIMITS.nameLength, required: true, multiline: false },
+  note: { label: "メモ", max: LIMITS.longTextLength, required: false, multiline: true },
+  title: { label: "件名", max: LIMITS.textLength, required: true, multiline: false },
+  body: { label: "本文", max: LIMITS.bodyLength, required: false, multiline: true },
 } as const satisfies Record<string, FieldSpec>;
 
 export type FieldResult = { ok: true; value: string } | { ok: false; error: string };
