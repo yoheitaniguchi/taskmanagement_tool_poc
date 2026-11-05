@@ -1,5 +1,5 @@
 // アプリの外枠：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
-// 年次目標・四半期シートとロードマップは、節目3の PR 8・9 で足す（docs/plans/milestone-3.md 2章）
+// ロードマップは、節目3の PR 9 で足す（docs/plans/milestone-3.md 2章）
 import { useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
@@ -14,11 +14,13 @@ import { capture } from "./domain/capture";
 import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
 import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
 import { moveItem } from "./domain/move";
+import { setAnnualGoal, setWontDo, toggleFocusTheme } from "./domain/plan";
 import { completeProject, createProject, deleteProject, editProject, placeProject, uncompleteProject } from "./domain/projects";
+import { currentQuarter } from "./domain/fiscal";
 import type { OpResult } from "./domain/types";
 import type { RowContext } from "./components/ItemRows";
 import { backupFileName } from "./domain/persistence";
-import { counts, projectSummaries, sortProjects } from "./domain/summaries";
+import { counts, projectSummaries, quarterOverview, sortProjects } from "./domain/summaries";
 import { downloadText } from "./files";
 import { screenLabel } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -26,6 +28,7 @@ import { ClarifyFlow } from "./screens/ClarifyFlow";
 import { InboxScreen } from "./screens/InboxScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { PlaceListScreen } from "./screens/PlaceListScreen";
+import { PlanScreen, type PlanHandlers } from "./screens/PlanScreen";
 import { ProjectDetailScreen, type ProjectHandlers } from "./screens/ProjectDetailScreen";
 import { ProjectsScreen } from "./screens/ProjectsScreen";
 import { usePersistedState } from "./state/usePersistedState";
@@ -37,6 +40,14 @@ export default function App() {
   const store = usePersistedState();
   const route = useRoute();
   const [dialog, setDialog] = useState<Dialog>(null);
+  // 年次目標・四半期シートで表示する年度（URLには持たない。null は今の年度）。画面を離れたら今の年度に戻す
+  // （プロジェクトの詳細から、置いた年度を渡して開くときだけ使う。docs/plans/milestone-3.md 2.2）
+  const [planYear, setPlanYear] = useState<number | null>(null);
+  const [prevScreen, setPrevScreen] = useState(route.screen);
+  if (prevScreen !== route.screen) {
+    setPrevScreen(route.screen);
+    if (prevScreen === "plan") setPlanYear(null);
+  }
   const readOnly = store.status.readOnly;
   // 退避は起動時と消去のときにしか変わらない（毎回の描画で大きな値を読まないため）
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -186,6 +197,26 @@ export default function App() {
     },
   };
 
+  /** 年次目標・四半期シートの操作（docs/design.md 3.7） */
+  const planHandlers: PlanHandlers = {
+    onSetGoal: (fiscalYear, themeId, text) => {
+      const at = new Date();
+      const id = crypto.randomUUID();
+      return run({ type: "setAnnualGoal", fiscalYear, themeId, text, at: at.toISOString(), id }, () => setAnnualGoal(state, fiscalYear, themeId, text, at, () => id));
+    },
+    onToggleFocus: (fiscalYear, quarter, themeId) => {
+      const at = new Date();
+      const id = crypto.randomUUID();
+      return run({ type: "toggleFocusTheme", fiscalYear, quarter, themeId, at: at.toISOString(), id }, () => toggleFocusTheme(state, fiscalYear, quarter, themeId, at, () => id));
+    },
+    onSetWontDo: (fiscalYear, quarter, text) => {
+      const at = new Date();
+      const id = crypto.randomUUID();
+      return run({ type: "setWontDo", fiscalYear, quarter, text, at: at.toISOString(), id }, () => setWontDo(state, fiscalYear, quarter, text, at, () => id));
+    },
+    onPlaceProject: projectHandlers.onPlaceProject,
+  };
+
   const onCreateProject = (input: Parameters<typeof createProject>[1], placement: Parameters<typeof createProject>[2]) => {
     const at = new Date();
     const id = crypto.randomUUID();
@@ -210,6 +241,10 @@ export default function App() {
               projectSummaries(state).filter((x) => x.project.status === "active"),
               "theme",
             )}
+            quarter={(() => {
+              const q = currentQuarter(now);
+              return quarterOverview(state, q.fiscalYear, q.quarter);
+            })()}
             showIntro={!store.meta.introDismissed}
             onDismissIntro={store.dismissIntro}
           />
@@ -239,11 +274,22 @@ export default function App() {
         // id が無い（削除した・別の端末のURL）ときは一覧を出す（D14）
         const project = route.projectId === null ? undefined : state.projects.find((p) => p.id === route.projectId);
         return project ? (
-          <ProjectDetailScreen key={project.id} project={project} state={state} ctx={rowCtx} handlers={projectHandlers} />
+          <ProjectDetailScreen key={project.id} project={project} state={state} ctx={rowCtx} handlers={projectHandlers} onOpenPlan={setPlanYear} />
         ) : (
           <ProjectsScreen state={state} now={now} disabledReason={changeBlocked} onCreate={onCreateProject} />
         );
       }
+      case "plan":
+        return (
+          <PlanScreen
+            state={state}
+            now={now}
+            fiscalYear={planYear ?? currentQuarter(now).fiscalYear}
+            onChangeYear={setPlanYear}
+            disabledReason={changeBlocked}
+            handlers={planHandlers}
+          />
+        );
       default:
         return <PlaceholderScreen title={screenLabel(route.screen)} />;
     }

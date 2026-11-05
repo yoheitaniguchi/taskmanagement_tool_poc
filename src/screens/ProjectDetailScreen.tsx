@@ -33,9 +33,11 @@ interface Props {
   state: AppState;
   ctx: Omit<RowContext, "showProject">;
   handlers: ProjectHandlers;
+  /** 年次目標・四半期シートを、この年度で開く（年度はURLに持たないので、開く前に渡す。docs/plans/milestone-3.md 2.2） */
+  onOpenPlan: (fiscalYear: number) => void;
 }
 
-export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props) {
+export function ProjectDetailScreen({ project: p, state, ctx, handlers, onOpenPlan }: Props) {
   const [showDone, setShowDone] = useState(false);
   const [editing, setEditing] = useState(false);
   const [placing, setPlacing] = useState(false);
@@ -172,7 +174,9 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props)
           {p.placement
             ? `${quarterLabel(p.placement.fiscalYear, p.placement.quarter)}に置いています（この四半期の重点テーマ${focus ? "です" : "ではありません"}）`
             : "四半期に置いていません"}{" "}
-          <a href={routeHref("plan")}>年次目標・四半期シート</a>
+          <a href={routeHref("plan")} onClick={() => onOpenPlan(fy)}>
+            {fiscalYearLabel(fy)}の年次目標・四半期シート
+          </a>
         </p>
       </section>
       <section aria-labelledby="project-next">

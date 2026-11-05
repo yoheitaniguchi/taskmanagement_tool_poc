@@ -1,8 +1,7 @@
 // ホーム（F08 の最小限。docs/design.md 3.2・3.10、docs/plans/milestone-2.md 2章）。
 // 状態の表示だけを置き、結論・指示（「〜しましょう」「滞留しています」など）は出さない（CLAUDE.md 4.3）。
-// 今の四半期の欄は、節目3の PR 8 で足す
 import { quarterLabel } from "../domain/fiscal";
-import type { Counts, ProjectSummary } from "../domain/summaries";
+import type { Counts, ProjectSummary, QuarterOverview } from "../domain/summaries";
 import { themeLabel } from "../domain/themes";
 import { clarifyHref, routeHref, type ScreenId } from "../route";
 
@@ -10,6 +9,8 @@ interface Props {
   counts: Counts;
   /** 進行中のプロジェクト（テーマの表示順 → 名称順で並べたもの） */
   projects: ProjectSummary[];
+  /** 今の四半期（重点テーマと、置いたプロジェクトの件数） */
+  quarter: QuarterOverview;
   showIntro: boolean;
   onDismissIntro: () => void;
 }
@@ -21,7 +22,7 @@ const OTHER_COUNTS: { key: keyof Counts; label: string; screen: ScreenId }[] = [
   { key: "references", label: "資料", screen: "reference" },
 ];
 
-export function HomeScreen({ counts, projects, showIntro, onDismissIntro }: Props) {
+export function HomeScreen({ counts, projects, quarter, showIntro, onDismissIntro }: Props) {
   return (
     <>
       <h1 tabIndex={-1}>ホーム</h1>
@@ -46,6 +47,15 @@ export function HomeScreen({ counts, projects, showIntro, onDismissIntro }: Prop
             明確化を始める
           </a>
         )}
+      </section>
+      <section aria-labelledby="home-quarter">
+        <h2 id="home-quarter">今の四半期</h2>
+        <p>{quarterLabel(quarter.fiscalYear, quarter.quarter)}</p>
+        <p>重点テーマ：{quarter.focusThemeIds.length === 0 ? "未設定" : quarter.focusThemeIds.map(themeLabel).join("・")}</p>
+        <p>
+          主要プロジェクト <strong>{quarter.projects.length}</strong>件（うち完了 {quarter.doneCount}件）
+        </p>
+        <a href={routeHref("plan")}>四半期シートを開く</a>
       </section>
       <section aria-labelledby="home-projects">
         <h2 id="home-projects">
