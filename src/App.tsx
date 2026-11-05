@@ -121,7 +121,9 @@ export default function App() {
   const run = (action: Parameters<typeof store.dispatch>[0], recheck: () => OpResult): string | null => {
     if (store.dispatch(action)) return null;
     const result = recheck();
-    return result.ok ? "このタブでは変更できません" : result.error;
+    if (!result.ok) return result.error;
+    // 変えるものが無かった（同じ四半期に置き直したなど）ときは、失敗ではない
+    return result.state === state ? null : "このタブでは変更できません";
   };
 
   /** 置き場の一覧・プロジェクトの詳細の行で使う操作（docs/design.md 3.3） */

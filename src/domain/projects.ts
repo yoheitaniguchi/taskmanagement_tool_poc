@@ -25,6 +25,8 @@ const PROJECT_NOT_FOUND = "そのプロジェクトが見つかりません（�
 type Attrs = { name: string; outcome: string; themeId: ThemeId; note: string };
 
 function readAttrs(input: ProjectInput): { ok: true; value: Attrs } | Fail {
+  // 型の外の値（今のコードからは作れない）でも、例外にせず失敗を返す（SEC-006）
+  if (typeof input !== "object" || input === null) return fail("入力が正しくありません");
   const name = readField(input.name, FIELDS.projectName);
   if (!name.ok) return name;
   const outcome = readField(input.outcome, FIELDS.outcome);
@@ -38,6 +40,7 @@ function readAttrs(input: ProjectInput): { ok: true; value: Attrs } | Fail {
 
 function checkPlacement(p: Placement | null): Fail | null {
   if (p === null) return null;
+  if (typeof p !== "object") return fail("置く四半期が正しくありません");
   return isFiscalYear(p.fiscalYear) && isQuarter(p.quarter) ? null : fail("置く四半期が正しくありません");
 }
 
@@ -92,7 +95,7 @@ export function placeProject(state: AppState, id: string, placement: Placement |
   if (expectedThemeId !== undefined && expectedThemeId !== project.themeId) return fail("ほかのテーマの行には移せません（テーマはプロジェクトの編集で変えてください）");
   const same = project.placement === null ? placement === null : placement !== null && project.placement.fiscalYear === placement.fiscalYear && project.placement.quarter === placement.quarter;
   if (same) return { ok: true, state };
-  return { ok: true, state: { ...state, projects: replaceIn(state.projects, { ...project, placement, updatedAt: stampFor(project, now) }) } };
+  return checkSize({ ...state, projects: replaceIn(state.projects, { ...project, placement, updatedAt: stampFor(project, now) }) });
 }
 
 /** 完了にしたときに一緒に完了になる、未完了の子の件数（「元に戻す」の文言に使う。docs/design.md 4.4） */

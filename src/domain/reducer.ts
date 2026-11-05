@@ -110,8 +110,9 @@ export function completeProjectMessage(openChildren: number): string {
 
 /** 四半期を移したときの文言（D16）。移した先が今の表示の外でも分かるように、年度まで書く */
 export function placeMessage(state: AppState, projectId: string, placement: Placement | null): string {
-  if (placement === null) return "四半期から外しました";
+  if (placement == null) return "四半期から外しました";
   const before = state.projects.find((p) => p.id === projectId)?.placement ?? null;
+  if (typeof placement !== "object") return "";
   return `${quarterLabel(placement.fiscalYear, placement.quarter)}${before === null ? "に置きました" : "に移しました"}`;
 }
 

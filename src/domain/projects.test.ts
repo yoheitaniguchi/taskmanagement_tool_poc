@@ -236,3 +236,44 @@ describe("reducer：プロジェクトの操作と「元に戻す」（D2・D16�
     }
   });
 });
+
+describe("時計の遅れ・上限・型の外の値（domain-reviewer の点検）", () => {
+  it("時計が遅れていても、置く四半期の変更・完了の取り消し・切り離しで更新日時が戻らない", () => {
+    const { state, p, todo, w } = setup();
+    const NEWER = "2026-11-06T00:00:00.000Z";
+    const s: AppState = {
+      ...state,
+      projects: state.projects.map((x) => (x.id === p.id ? { ...x, updatedAt: NEWER } : x)),
+      actions: state.actions.map((a) => (a.id === todo.id ? { ...a, updatedAt: NEWER } : a)),
+      waitingFors: state.waitingFors.map((x) => (x.id === w.id ? { ...x, updatedAt: NEWER } : x)),
+    };
+    expect(ok(placeProject(s, p.id, { fiscalYear: 2026, quarter: 2 }, BEHIND)).projects[0].updatedAt).toBe(NEWER);
+    const done = ok(completeProject(s, p.id, BEHIND));
+    expect(ok(uncompleteProject(done, p.id, BEHIND)).projects[0].updatedAt).toBe(NEWER);
+    const detached = ok(deleteProject(s, p.id, "detach", BEHIND));
+    expect(detached.actions.find((a) => a.id === todo.id)?.updatedAt).toBe(NEWER);
+    expect(detached.waitingFors.find((x) => x.id === w.id)?.updatedAt).toBe(NEWER);
+    expect(detached.actions.find((a) => a.projectId === null && a.themeId === "work" && a.id !== todo.id)?.updatedAt).toBe(T0);
+  });
+
+  it("子を足すときも、件数の上限を超えるなら理由を返して足さない", () => {
+    const { state, p } = setup();
+    const full: AppState = {
+      ...state,
+      actions: [...state.actions, ...Array.from({ length: LIMITS.itemsPerList - state.actions.length }, () => action())],
+      waitingFors: [...state.waitingFors, ...Array.from({ length: LIMITS.itemsPerList - state.waitingFors.length }, () => waiting())],
+    };
+    expect(err(addActionToProject(full, p.id, "足す", NOW, uuid))).toBe("アクションは 10,000件までです");
+    expect(err(addWaitingToProject(full, p.id, { text: "頼む", party: "相手", requestedOn: "2026-11-05" }, NOW, uuid))).toBe("連絡待ちは 10,000件までです");
+  });
+
+  it("[@security] 型の外の値（置く四半期・入力が無い）でも、例外にせず失敗を返す（SEC-006）", () => {
+    const { state, p } = setup();
+    expect(err(placeProject(state, p.id, undefined as never, NOW))).toBe("置く四半期が正しくありません");
+    expect(err(createProject(state, undefined as never, null, NOW, uuid))).toBe("入力が正しくありません");
+    expect(err(editProject(state, p.id, null as never, NOW))).toBe("入力が正しくありません");
+    const root = initialRoot(state);
+    expect(reducer(root, { type: "placeProject", id: p.id, placement: undefined as never, at: AT })).toBe(root);
+    expect(reducer(root, { type: "placeProject", id: p.id, placement: "2026-1" as never, at: AT })).toBe(root);
+  });
+});
