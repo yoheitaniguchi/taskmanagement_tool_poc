@@ -7,6 +7,7 @@ import type { CompletableKind, ItemEdit, ItemRef } from "../domain/items";
 import { THEMES, isThemeId, themeLabel } from "../domain/themes";
 import type { Action, Project, ReferenceItem, SomedayItem, WaitingFor } from "../domain/types";
 import { formatDate } from "../labels";
+import { FieldMark } from "./FieldMark";
 import { routeHref } from "../route";
 
 export interface ItemHandlers {
@@ -272,13 +273,12 @@ function Field({ name, spec, value, onChange, autoFocus }: { name: string; spec:
   return (
     <div className="item-edit__field">
       <label htmlFor={id}>
-        {spec.label}
-        {!spec.required && <span className="hint">（任意）</span>}
+        {spec.label} <FieldMark required={spec.required} />
       </label>
       {spec.multiline ? (
-        <textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} />
+        <textarea id={id} value={value} aria-required={spec.required} onChange={(e) => onChange(e.target.value)} />
       ) : (
-        <input id={id} type="text" value={value} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
+        <input id={id} type="text" value={value} aria-required={spec.required} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
       )}
       {hint !== null && <p className="message--error">{hint}</p>}
     </div>
@@ -291,7 +291,9 @@ function ProjectSelect({ value, current, ctx, onChange }: { value: string; curre
   const currentDone = ctx.projects.find((p) => p.id === current && p.status === "done");
   return (
     <div className="item-edit__field">
-      <label htmlFor={id}>属するプロジェクト</label>
+      <label htmlFor={id}>
+        属するプロジェクト <FieldMark required={false} />
+      </label>
       <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
         <option value="">なし（単独）</option>
         {currentDone && <option value={currentDone.id}>{currentDone.name}（完了）</option>}
@@ -353,7 +355,7 @@ function ActionEdit({ item, ctx, onClose }: { item: Action; ctx: RowContext; onC
       {projectId === "" && (
         <div className="item-edit__field">
           <label htmlFor={themeId}>
-            テーマ<span className="hint">（任意）</span>
+            テーマ <FieldMark required={false} />
           </label>
           <select id={themeId} value={theme} onChange={(ev) => setTheme(ev.target.value)}>
             <option value="">なし</option>
@@ -390,8 +392,10 @@ function WaitingEdit({ item, ctx, onClose }: { item: WaitingFor; ctx: RowContext
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
       <Field name="party" spec={FIELDS.party} value={party} onChange={setParty} />
       <div className="item-edit__field">
-        <label htmlFor={dateId}>依頼日</label>
-        <input id={dateId} type="date" value={requestedOn} onChange={(ev) => setRequestedOn(ev.target.value)} />
+        <label htmlFor={dateId}>
+          依頼日 <FieldMark required />
+        </label>
+        <input id={dateId} type="date" aria-required="true" value={requestedOn} onChange={(ev) => setRequestedOn(ev.target.value)} />
       </div>
       <ProjectSelect value={projectId} current={item.projectId} ctx={ctx} onChange={setProjectId} />
       <Field name="note" spec={FIELDS.note} value={note} onChange={setNote} />

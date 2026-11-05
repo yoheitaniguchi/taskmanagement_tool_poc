@@ -1616,3 +1616,23 @@ body:has(.undo-bar) .app {
     margin-bottom: 8px;
   }
 }
+
+/* ---- 入力欄の「必須」「任意」（文字で示す） ---- */
+.field-mark {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  vertical-align: 0.1em;
+}
+
+.field-mark--required {
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+  background: var(--danger-bg);
+}

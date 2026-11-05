@@ -9,6 +9,7 @@ import { FIELDS, fieldHint, readField } from "../domain/fields";
 import { currentQuarter, quarterLabel, toLocalDate } from "../domain/fiscal";
 import { THEMES, isThemeId, type ThemeId } from "../domain/themes";
 import type { InboxItem, Placement, Project, Quarter } from "../domain/types";
+import { FieldMark } from "../components/FieldMark";
 import { formatDateTime } from "../labels";
 import { clarifyHref, routeHref, type ClarifyStep } from "../route";
 import { backThenReplace, pushHash } from "../state/navigate";
@@ -313,14 +314,18 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
               <fieldset className="clarify__form">
                 <legend>プロジェクト</legend>
                 <TextInput id="clarify-name" label="プロジェクトの名称" spec={FIELDS.projectName} value={d.name} onChange={(name) => update({ name })} />
-                <label htmlFor="clarify-outcome">目的とする成果</label>
+                <label htmlFor="clarify-outcome">
+                  目的とする成果 <FieldMark required />
+                </label>
                 <p className="hint" id="clarify-outcome-desc">
                   終わったとき、どうなっていれば完了ですか？
                 </p>
-                <textarea id="clarify-outcome" aria-describedby="clarify-outcome-desc" value={d.outcome} onChange={(e) => update({ outcome: e.target.value })} />
+                <textarea id="clarify-outcome" aria-required="true" aria-describedby="clarify-outcome-desc" value={d.outcome} onChange={(e) => update({ outcome: e.target.value })} />
                 <FieldHint value={d.outcome} spec={FIELDS.outcome} />
                 <fieldset className="clarify__themes">
-                  <legend>テーマ</legend>
+                  <legend>
+                    テーマ <FieldMark required />
+                  </legend>
                   {THEMES.map((t) => (
                     <label key={t.id} className="chip">
                       <input type="radio" name="clarify-theme" checked={d.themeId === t.id} onChange={() => update({ themeId: t.id })} />
@@ -328,7 +333,9 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                     </label>
                   ))}
                 </fieldset>
-                <label htmlFor="clarify-placement">置く四半期（任意）</label>
+                <label htmlFor="clarify-placement">
+                  置く四半期 <FieldMark required={false} />
+                </label>
                 <select id="clarify-placement" aria-describedby="clarify-placement-desc" value={d.placement} onChange={(e) => update({ placement: e.target.value })}>
                   <option value="">置かない</option>
                   {placementOptions(now).map((p) => (
@@ -386,8 +393,10 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 {d.choice === "delegate" && (
                   <>
                     <TextInput id="clarify-party" label="相手" spec={FIELDS.party} value={d.party} onChange={(party) => update({ party })} />
-                    <label htmlFor="clarify-requested">依頼日</label>
-                    <input id="clarify-requested" type="date" value={d.requestedOn} onChange={(e) => update({ requestedOn: e.target.value })} />
+                    <label htmlFor="clarify-requested">
+                      依頼日 <FieldMark required />
+                    </label>
+                    <input id="clarify-requested" type="date" aria-required="true" value={d.requestedOn} onChange={(e) => update({ requestedOn: e.target.value })} />
                   </>
                 )}
                 {d.choice === "calendar" && (
@@ -397,7 +406,9 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 )}
                 {!isProject && (d.choice === "delegate" || d.choice === "next") && (
                   <>
-                    <label htmlFor="clarify-project">属するプロジェクト（任意）</label>
+                    <label htmlFor="clarify-project">
+                      属するプロジェクト <FieldMark required={false} />
+                    </label>
                     <select id="clarify-project" value={d.projectId} onChange={(e) => update({ projectId: e.target.value })}>
                       <option value="">なし（単独）</option>
                       {THEMES.map((t) => {
@@ -417,7 +428,9 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 )}
                 {!isProject && d.choice === "next" && d.projectId === "" && (
                   <>
-                    <label htmlFor="clarify-theme">テーマ（任意）</label>
+                    <label htmlFor="clarify-theme">
+                      テーマ <FieldMark required={false} />
+                    </label>
                     <select id="clarify-theme" value={d.standaloneTheme} onChange={(e) => update({ standaloneTheme: e.target.value })}>
                       <option value="">なし</option>
                       {THEMES.map((t) => (
@@ -487,13 +500,15 @@ function TextInput({
 }) {
   return (
     <>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>
+        {label} <FieldMark required={spec.required} />
+      </label>
       {description && (
         <p className="hint" id={`${id}-desc`}>
           {description}
         </p>
       )}
-      <input id={id} type="text" value={value} aria-describedby={description ? `${id}-desc` : undefined} onChange={(e) => onChange(e.target.value)} />
+      <input id={id} type="text" value={value} aria-required={spec.required} aria-describedby={description ? `${id}-desc` : undefined} onChange={(e) => onChange(e.target.value)} />
       <FieldHint value={value} spec={spec} />
     </>
   );
