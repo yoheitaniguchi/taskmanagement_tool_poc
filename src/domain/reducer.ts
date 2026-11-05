@@ -4,8 +4,20 @@
 import { capture } from "./capture";
 import { parseAt } from "./common";
 import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
-import { completeItem, deleteItem, editItem, uncompleteItem, type CompletableKind, type ItemEdit, type ItemRef } from "./items";
-import { emptyState, type AppState, type OpResult } from "./types";
+import { quarterLabel } from "./fiscal";
+import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem, type CompletableKind, type ItemEdit, type ItemRef } from "./items";
+import {
+  completeProject,
+  createProject,
+  deleteProject,
+  editProject,
+  openChildCount,
+  placeProject,
+  uncompleteProject,
+  type ChildPolicy,
+  type ProjectInput,
+} from "./projects";
+import { emptyState, type AppState, type OpResult, type Placement, type ThemeId } from "./types";
 import { validateState } from "./validate";
 
 /** 「元に戻す」で覚えておく、直前の1つの操作（保存はしない。docs/design.md 6.4） */
@@ -42,6 +54,22 @@ export type Action =
   | { type: "uncompleteItem"; ref: ItemRef<CompletableKind>; at: string }
   /** 置き場の要素の削除 */
   | { type: "deleteItem"; ref: ItemRef }
+  /** プロジェクトを直接作る（D12）。id は新しい UUID */
+  | { type: "createProject"; input: ProjectInput; placement: Placement | null; at: string; id: string }
+  /** プロジェクトの属性の編集（「元に戻す」は出さない） */
+  | { type: "editProject"; id: string; input: ProjectInput; at: string }
+  /** 置く四半期を変える（D16 で「元に戻す」を出す）。expectedThemeId はロードマップのドラッグで落としたセルのテーマ */
+  | { type: "placeProject"; id: string; placement: Placement | null; expectedThemeId?: ThemeId; at: string }
+  /** プロジェクトを完了にする（未完了の子も一緒に。D2） */
+  | { type: "completeProject"; id: string; at: string }
+  /** プロジェクトの完了の取り消し（「元に戻す」は出さない） */
+  | { type: "uncompleteProject"; id: string; at: string }
+  /** プロジェクトの削除（確認画面を通してから。「元に戻す」は出さない。D3） */
+  | { type: "deleteProject"; id: string; childPolicy: ChildPolicy; at: string }
+  /** プロジェクトの画面から次のアクションを足す */
+  | { type: "addActionToProject"; projectId: string; text: string; at: string; id: string }
+  /** プロジェクトの画面から連絡待ちを足す */
+  | { type: "addWaitingToProject"; projectId: string; input: { text: string; party: string; requestedOn: string }; at: string; id: string }
   /** 「元に戻す」の表示を閉じる */
   | { type: "dismissUndo" }
   /** 別のタブの変更を検知したとき。覚えていた「元に戻す」を捨てる */
@@ -73,6 +101,18 @@ export function applyResult(root: Root, result: OpResult, undoMessage: string | 
 function timed(root: Root, at: string, run: (now: Date) => Root): Root {
   const now = parseAt(at);
   return now === null ? root : run(now);
+}
+
+/** プロジェクトの完了の「元に戻す」の文言（未完了の子の件数は、完了にする前の状態から数える。docs/design.md 4.4） */
+export function completeProjectMessage(openChildren: number): string {
+  return openChildren === 0 ? "プロジェクトを完了にしました" : `プロジェクトと、未完了の${openChildren}件を完了にしました`;
+}
+
+/** 四半期を移したときの文言（D16）。移した先が今の表示の外でも分かるように、年度まで書く */
+export function placeMessage(state: AppState, projectId: string, placement: Placement | null): string {
+  if (placement === null) return "四半期から外しました";
+  const before = state.projects.find((p) => p.id === projectId)?.placement ?? null;
+  return `${quarterLabel(placement.fiscalYear, placement.quarter)}${before === null ? "に置きました" : "に移しました"}`;
 }
 
 export function reducer(root: Root, action: Action): Root {
@@ -107,6 +147,24 @@ export function reducer(root: Root, action: Action): Root {
       return timed(root, action.at, (now) => applyResult(root, uncompleteItem(root.state, action.ref, now), null));
     case "deleteItem":
       return applyResult(root, deleteItem(root.state, action.ref), "削除しました");
+    case "createProject":
+      return timed(root, action.at, (now) => applyResult(root, createProject(root.state, action.input, action.placement, now, () => action.id), null));
+    case "editProject":
+      return timed(root, action.at, (now) => applyResult(root, editProject(root.state, action.id, action.input, now), null));
+    case "placeProject":
+      return timed(root, action.at, (now) =>
+        applyResult(root, placeProject(root.state, action.id, action.placement, now, action.expectedThemeId), placeMessage(root.state, action.id, action.placement)),
+      );
+    case "completeProject":
+      return timed(root, action.at, (now) => applyResult(root, completeProject(root.state, action.id, now), completeProjectMessage(openChildCount(root.state, action.id))));
+    case "uncompleteProject":
+      return timed(root, action.at, (now) => applyResult(root, uncompleteProject(root.state, action.id, now), null));
+    case "deleteProject":
+      return timed(root, action.at, (now) => applyResult(root, deleteProject(root.state, action.id, action.childPolicy, now), null));
+    case "addActionToProject":
+      return timed(root, action.at, (now) => applyResult(root, addActionToProject(root.state, action.projectId, action.text, now, () => action.id), null));
+    case "addWaitingToProject":
+      return timed(root, action.at, (now) => applyResult(root, addWaitingToProject(root.state, action.projectId, action.input, now, () => action.id), null));
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
