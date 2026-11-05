@@ -1,17 +1,20 @@
 // プロジェクトの詳細（F04。docs/design.md 3.6・3.9・4.4）。
 // 属性と、年次目標・四半期とのつながり、次のアクション・連絡待ちを表示する。
-// プロジェクトの編集・置く四半期の変更・完了・完了の取り消し・削除と、子を足す操作ができる。置き場の間の移動は PR 7 で足す
+// プロジェクトの編集・置く四半期の変更・完了・完了の取り消し・置き場の間の移動・削除と、子を足す操作ができる
 import { useState } from "react";
 import { DeleteProjectDialog } from "../components/DeleteProjectDialog";
+import { MoveDialog } from "../components/MoveDialog";
 import { FieldMark } from "../components/FieldMark";
-import { Field, ItemRows, type RowContext } from "../components/ItemRows";
+import { Field } from "../components/Field";
+import { ItemRows, type RowContext } from "../components/ItemRows";
 import { PlacementPicker, ProjectForm } from "../components/ProjectForm";
 import { FIELDS } from "../domain/fields";
 import { currentQuarter, fiscalYearLabel, quarterLabel, toLocalDate } from "../domain/fiscal";
 import type { ChildPolicy, ProjectInput } from "../domain/projects";
 import { themeLabel } from "../domain/themes";
 import type { AppState, Placement, Project } from "../domain/types";
-import { routeHref } from "../route";
+import type { PlaceKind } from "../domain/move";
+import { routeHref, type ScreenId } from "../route";
 import { replaceHash } from "../state/navigate";
 
 /** プロジェクトそのものの操作。どれも、できなければ理由を返す */
@@ -37,6 +40,7 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props)
   const [editing, setEditing] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const rowCtx: RowContext = { ...ctx, showProject: false };
   const blocked = ctx.disabledReason;
@@ -70,6 +74,20 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props)
         <button type="button" className={active ? "button--primary" : undefined} disabled={blocked !== null} onClick={toggleDone}>
           {active ? "完了にする" : "完了を取り消す"}
         </button>
+        {active && (
+          <button
+            type="button"
+            disabled={blocked !== null}
+            onClick={() => {
+              // 未完了の子があると移せない（D4）。押したときに理由と件数を出し、すぐ下の一覧で片付けられるようにする
+              const open = openActions.length + openWaitings.length;
+              if (open > 0) setError(`未完了の次のアクション・連絡待ちが${open}件あります。先に完了・移動・削除してください`);
+              else setMoving(true);
+            }}
+          >
+            移す…
+          </button>
+        )}
         <button type="button" className="button--danger" disabled={blocked !== null} onClick={() => setDeleting(true)}>
           削除…
         </button>
@@ -181,6 +199,24 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props)
       </section>
       {!active && <p className="hint">完了したプロジェクトには、次のアクション・連絡待ちを足せません。足すときは、先に完了を取り消してください。</p>}
 
+      {moving && (
+        <MoveDialog
+          state={state}
+          source={{ kind: "project", id: p.id }}
+          text={p.name}
+          themeId={p.themeId}
+          projectId={null}
+          now={ctx.now}
+          disabledReason={blocked}
+          onClose={() => setMoving(false)}
+          onMove={(target, input) => {
+            const e = ctx.onMove({ kind: "project", id: p.id }, target, input);
+            // 移したら、移した先の一覧へ移る（このプロジェクトの詳細はもう無い）
+            if (e === null) replaceHash(routeHref(SCREEN_OF[target]));
+            return e;
+          }}
+        />
+      )}
       {deleting && (
         <DeleteProjectDialog
           project={p}
@@ -197,6 +233,8 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers }: Props)
     </>
   );
 }
+
+const SCREEN_OF: Record<PlaceKind, ScreenId> = { action: "next", waiting: "waiting", project: "projects", someday: "someday", reference: "reference" };
 
 function PlacementEdit({
   project,

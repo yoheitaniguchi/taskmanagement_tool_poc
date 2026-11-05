@@ -13,6 +13,7 @@ import { UndoBar } from "./components/UndoBar";
 import { capture } from "./domain/capture";
 import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
 import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
+import { moveItem } from "./domain/move";
 import { completeProject, createProject, deleteProject, editProject, placeProject, uncompleteProject } from "./domain/projects";
 import type { OpResult } from "./domain/types";
 import type { RowContext } from "./components/ItemRows";
@@ -128,6 +129,7 @@ export default function App() {
 
   /** 置き場の一覧・プロジェクトの詳細の行で使う操作（docs/design.md 3.3） */
   const rowCtx: Omit<RowContext, "showProject"> = {
+    state,
     projects: state.projects,
     now,
     disabledReason: changeBlocked,
@@ -144,6 +146,10 @@ export default function App() {
       return run({ type: "uncompleteItem", ref, at: at.toISOString() }, () => uncompleteItem(state, ref, at));
     },
     onDelete: (ref) => run({ type: "deleteItem", ref }, () => deleteItem(state, ref)),
+    onMove: (source, target, input) => {
+      const at = new Date();
+      return run({ type: "moveItem", source, target, input, at: at.toISOString() }, () => moveItem(state, source, target, input, at));
+    },
   };
 
   /** プロジェクトそのものの操作（docs/design.md 3.6・4.4） */
