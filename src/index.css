@@ -1177,13 +1177,15 @@ tbody tr:hover > * {
   margin-bottom: 8px;
 }
 
-.clarify__themes {
+.clarify__themes,
+.move-dialog__targets {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.clarify__themes legend {
+.clarify__themes legend,
+.move-dialog__targets legend {
   font-weight: 500;
   font-size: 0.93rem;
 }

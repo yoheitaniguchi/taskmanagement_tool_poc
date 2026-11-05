@@ -7,7 +7,7 @@ import type { ProjectInput } from "../domain/projects";
 import { THEMES, isThemeId } from "../domain/themes";
 import type { Placement, Project, Quarter } from "../domain/types";
 import { FieldMark } from "./FieldMark";
-import { Field } from "./ItemRows";
+import { Field } from "./Field";
 
 /** 置く四半期の選択（年度と四半期の2つ）。年度は今の年度の前後と、今置いている年度 */
 export function PlacementPicker({ value, onChange, now, idPrefix }: { value: Placement | null; onChange: (p: Placement | null) => void; now: Date; idPrefix: string }) {

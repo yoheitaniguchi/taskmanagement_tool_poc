@@ -1,13 +1,16 @@
 // 置き場の一覧の行（次のアクション・連絡待ち・いつか・多分・資料。docs/design.md 3.3）。
 // 1行に1件。行の末尾の［編集］で、その行がその場で編集の形に開く。完了の状態を持つものは、行の先頭のチェックボックスで完了にする。
-// 置き場の間の移動（［移す…］）は節目3で足す
-import { useId, useState, type ReactNode } from "react";
-import { FIELDS, fieldHint, type FieldSpec } from "../domain/fields";
+// 編集の形の［移す…］で、置き場の間を移す（docs/design.md 4.3。完了したものは移せないので出さない）
+import { useState, type ReactNode } from "react";
+import { FIELDS } from "../domain/fields";
 import type { CompletableKind, ItemEdit, ItemRef } from "../domain/items";
+import type { MoveInput, MoveRef, PlaceKind } from "../domain/move";
 import { THEMES, isThemeId, themeLabel } from "../domain/themes";
-import type { Action, Project, ReferenceItem, SomedayItem, WaitingFor } from "../domain/types";
+import type { Action, AppState, Project, ReferenceItem, SomedayItem, WaitingFor } from "../domain/types";
 import { formatDate } from "../labels";
 import { FieldMark } from "./FieldMark";
+import { Field, useFieldId } from "./Field";
+import { MoveDialog } from "./MoveDialog";
 import { routeHref } from "../route";
 
 export interface ItemHandlers {
@@ -16,9 +19,12 @@ export interface ItemHandlers {
   onComplete: (ref: ItemRef<CompletableKind>) => string | null;
   onUncomplete: (ref: ItemRef<CompletableKind>) => string | null;
   onDelete: (ref: ItemRef) => string | null;
+  onMove: (source: MoveRef, target: PlaceKind, input: MoveInput) => string | null;
 }
 
 export interface RowContext extends ItemHandlers {
+  /** 移動の画面で「引き継がれないもの」を出すために使う */
+  state: AppState;
   projects: readonly Project[];
   now: Date;
   /** 変更できない理由（読み取り専用のタブなど）。null なら変更できる */
@@ -218,6 +224,7 @@ function EditFrame({
   onSave,
   onCancel,
   onDelete,
+  move,
   children,
 }: {
   title: string;
@@ -226,8 +233,11 @@ function EditFrame({
   onSave: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  /** 移す画面の中身（完了したものは null で、［移す…］を出さない） */
+  move: Omit<MoveProps, "ctx"> | null;
   children: ReactNode;
 }) {
+  const [moving, setMoving] = useState(false);
   return (
     <li className="item-row item-row--editing">
       <form
@@ -254,34 +264,43 @@ function EditFrame({
           <button type="button" onClick={onCancel}>
             キャンセル
           </button>
+          {move !== null && (
+            <button type="button" disabled={ctx.disabledReason !== null} onClick={() => setMoving(true)}>
+              移す…
+            </button>
+          )}
           <button type="button" className="button--danger item-edit__delete" disabled={ctx.disabledReason !== null} onClick={onDelete}>
             削除
           </button>
         </div>
       </form>
+      {/* フォームの入れ子にならないよう、移す画面はフォームの外に置く */}
+      {moving && move !== null && <MoveFromRow {...move} ctx={ctx} onClose={() => setMoving(false)} />}
     </li>
   );
 }
 
-function useFieldId(name: string) {
-  return `edit-${name}${useId()}`;
+interface MoveProps {
+  source: MoveRef;
+  text: string;
+  themeId: Action["themeId"];
+  projectId: string | null;
+  ctx: RowContext;
 }
 
-export function Field({ name, spec, value, onChange, autoFocus }: { name: string; spec: FieldSpec; value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
-  const id = useFieldId(name);
-  const hint = fieldHint(value, spec);
+function MoveFromRow({ source, text, themeId, projectId, ctx, onClose }: MoveProps & { onClose: () => void }) {
   return (
-    <div className="item-edit__field">
-      <label htmlFor={id}>
-        {spec.label} <FieldMark required={spec.required} />
-      </label>
-      {spec.multiline ? (
-        <textarea id={id} value={value} aria-required={spec.required} onChange={(e) => onChange(e.target.value)} />
-      ) : (
-        <input id={id} type="text" value={value} aria-required={spec.required} autoFocus={autoFocus} onChange={(e) => onChange(e.target.value)} />
-      )}
-      {hint !== null && <p className="message--error">{hint}</p>}
-    </div>
+    <MoveDialog
+      state={ctx.state}
+      source={source}
+      text={text}
+      themeId={themeId}
+      projectId={projectId}
+      now={ctx.now}
+      disabledReason={ctx.disabledReason}
+      onMove={(target, input) => ctx.onMove(source, target, input)}
+      onClose={onClose}
+    />
   );
 }
 
@@ -346,6 +365,7 @@ function ActionEdit({ item, ctx, onClose }: { item: Action; ctx: RowContext; onC
       error={e.error}
       onCancel={onClose}
       onDelete={e.remove}
+      move={item.status === "done" ? null : { source: { kind: "action", id: item.id }, text: item.text, themeId: item.themeId, projectId: item.projectId }}
       onSave={() =>
         e.save({ kind: "action", id: item.id, text, note, projectId: projectId === "" ? null : projectId, themeId: projectId === "" && isThemeId(theme) ? theme : null })
       }
@@ -387,6 +407,7 @@ function WaitingEdit({ item, ctx, onClose }: { item: WaitingFor; ctx: RowContext
       error={e.error}
       onCancel={onClose}
       onDelete={e.remove}
+      move={item.status === "done" ? null : { source: { kind: "waiting", id: item.id }, text: item.text, themeId: null, projectId: item.projectId }}
       onSave={() => e.save({ kind: "waiting", id: item.id, text, party, requestedOn, note, projectId: projectId === "" ? null : projectId })}
     >
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
@@ -408,7 +429,14 @@ function SomedayEdit({ item, ctx, onClose }: { item: SomedayItem; ctx: RowContex
   const [note, setNote] = useState(item.note);
   const e = useEdit(ctx, { kind: "someday", id: item.id }, onClose);
   return (
-    <EditFrame title="いつか・多分の編集" ctx={ctx} error={e.error} onCancel={onClose} onDelete={e.remove} onSave={() => e.save({ kind: "someday", id: item.id, text, note })}>
+    <EditFrame
+      title="いつか・多分の編集"
+      ctx={ctx}
+      error={e.error}
+      onCancel={onClose}
+      onDelete={e.remove}
+      move={{ source: { kind: "someday", id: item.id }, text: item.text, themeId: null, projectId: null }}
+      onSave={() => e.save({ kind: "someday", id: item.id, text, note })}>
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
       <Field name="note" spec={FIELDS.note} value={note} onChange={setNote} />
     </EditFrame>
@@ -420,7 +448,14 @@ function ReferenceEdit({ item, ctx, onClose }: { item: ReferenceItem; ctx: RowCo
   const [body, setBody] = useState(item.body);
   const e = useEdit(ctx, { kind: "reference", id: item.id }, onClose);
   return (
-    <EditFrame title="資料の編集" ctx={ctx} error={e.error} onCancel={onClose} onDelete={e.remove} onSave={() => e.save({ kind: "reference", id: item.id, title, body })}>
+    <EditFrame
+      title="資料の編集"
+      ctx={ctx}
+      error={e.error}
+      onCancel={onClose}
+      onDelete={e.remove}
+      move={{ source: { kind: "reference", id: item.id }, text: item.title, themeId: null, projectId: null }}
+      onSave={() => e.save({ kind: "reference", id: item.id, title, body })}>
       <Field name="title" spec={FIELDS.title} value={title} onChange={setTitle} autoFocus />
       <Field name="body" spec={FIELDS.body} value={body} onChange={setBody} />
     </EditFrame>
