@@ -4,11 +4,11 @@
 // - 完了のものは完了日時を持ち、未完了のものは持たない
 // - 完了したプロジェクトに未完了の子を残さない（付け替え・完了の取り消しのどちらでも）
 // - プロジェクトに属するアクションはテーマを持たない
+import { checkSize, fail, NOT_FOUND, replaceIn, stampFor, type Fail } from "./common";
 import { FIELDS, readField } from "./fields";
 import { isValidDate } from "./fiscal";
 import { isThemeId, type ThemeId } from "./themes";
 import type { Action, AppState, OpResult, ReferenceItem, SomedayItem, WaitingFor } from "./types";
-import { LIMITS, stateSize } from "./validate";
 
 export type ItemKind = "action" | "waiting" | "someday" | "reference";
 /** 完了の状態を持つもの */
@@ -26,27 +26,10 @@ export type ItemEdit =
   | { kind: "someday"; id: string; text: string; note: string }
   | { kind: "reference"; id: string; title: string; body: string };
 
-type Fail = { ok: false; error: string };
-const fail = (error: string): Fail => ({ ok: false, error });
-
 const LIST_KEY = { action: "actions", waiting: "waitingFors", someday: "someday", reference: "references" } as const;
-const NOT_FOUND = "その項目が見つかりません（別のタブで変更したなど）";
-
-/**
- * 変更の時刻：今の時刻と、要素の更新日時の遅い方。
- * 端末の時計が遅れていても「作成日時 ≦ 完了日時 ≦ 更新日時」が破れないように（D15 と同じ考え方）
- */
-function stampFor(item: { updatedAt: string }, now: Date): string {
-  const at = now.toISOString();
-  return at < item.updatedAt ? item.updatedAt : at;
-}
-
-function replaceIn<T extends { id: string }>(list: readonly T[], next: T): T[] {
-  return list.map((x) => (x.id === next.id ? next : x));
-}
 
 function finish(state: AppState): OpResult {
-  return stateSize(state) > LIMITS.stateChars ? fail("保存できる大きさの上限に達しています。資料やメモなどを減らしてください") : { ok: true, state };
+  return checkSize(state);
 }
 
 /**
@@ -128,11 +111,15 @@ export function editItem(state: AppState, edit: ItemEdit, now: Date): OpResult {
       const next: ReferenceItem = { ...item, title: title.value, body: body.value, updatedAt: stampFor(item, now) };
       return finish({ ...state, references: replaceIn(state.references, next) });
     }
+    default:
+      // 型の外の値（今のコードからは作れない）でも、例外にせず失敗を返す（SEC-006）
+      return fail("編集する項目の種類が正しくありません");
   }
 }
 
 /** 完了にする（次のアクション・連絡待ち）。完了日時は今の時刻（時計の遅れは stampFor で揃える） */
 export function completeItem(state: AppState, ref: ItemRef<CompletableKind>, now: Date): OpResult {
+  if (ref.kind !== "action" && ref.kind !== "waiting") return fail("完了にする項目の種類が正しくありません");
   if (ref.kind === "action") {
     const item = state.actions.find((x) => x.id === ref.id);
     if (!item) return fail(NOT_FOUND);
@@ -149,6 +136,7 @@ export function completeItem(state: AppState, ref: ItemRef<CompletableKind>, now
 
 /** 完了を取り消す。属するプロジェクトが完了なら取り消せない（完了したプロジェクトに未完了の子を残さないため。docs/design.md 4.4） */
 export function uncompleteItem(state: AppState, ref: ItemRef<CompletableKind>, now: Date): OpResult {
+  if (ref.kind !== "action" && ref.kind !== "waiting") return fail("完了を取り消す項目の種類が正しくありません");
   const item = ref.kind === "action" ? state.actions.find((x) => x.id === ref.id) : state.waitingFors.find((x) => x.id === ref.id);
   if (!item) return fail(NOT_FOUND);
   if (item.status !== "done") return fail("完了していません");
@@ -166,6 +154,7 @@ export function uncompleteItem(state: AppState, ref: ItemRef<CompletableKind>, n
 
 /** 削除する（確認は出さず、直後の「元に戻す」で救う。7.1） */
 export function deleteItem(state: AppState, ref: ItemRef): OpResult {
+  if (!Object.hasOwn(LIST_KEY, ref.kind)) return fail("削除する項目の種類が正しくありません");
   const key = LIST_KEY[ref.kind];
   const list = state[key] as readonly { id: string }[];
   if (!list.some((x) => x.id === ref.id)) return fail(NOT_FOUND);

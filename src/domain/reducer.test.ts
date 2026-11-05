@@ -62,3 +62,24 @@ describe("「元に戻す」（D1、docs/design.md 6.4）", () => {
     expect(applyResult(after, { ok: true, state: bad }, "x")).toBe(after);
   });
 });
+
+describe("型の外の値を受け取ったとき（SEC-006）", () => {
+  const root = initialRoot(sampleState());
+  const item = root.state.inbox[0];
+
+  it("[@security] 読めない時刻の操作は、例外にせず何もしない", () => {
+    expect(reducer(root, { type: "capture", text: "テスト", at: "not-a-date", id: "00000000-0000-4000-8000-000000999001" })).toBe(root);
+    expect(reducer(root, { type: "completeItem", ref: { kind: "action", id: root.state.actions[0].id }, at: "" })).toBe(root);
+  });
+
+  it("[@security] 知らない出口・置き場の種類・操作は、例外にせず何もしない", () => {
+    const at = "2026-11-05T03:00:00.000Z";
+    expect(reducer(root, { type: "clarify", itemId: item.id, decision: { exit: "unknown" } as never, at, ids: [] })).toBe(root);
+    expect(reducer(root, { type: "clarifyBulk", itemIds: [item.id], exit: "unknown" as never, at, ids: [] })).toBe(root);
+    expect(reducer(root, { type: "deleteItem", ref: { kind: "unknown" as never, id: item.id } })).toBe(root);
+    expect(reducer(root, { type: "deleteItem", ref: { kind: "toString" as never, id: item.id } })).toBe(root);
+    expect(reducer(root, { type: "editItem", edit: { kind: "unknown" } as never, at })).toBe(root);
+    expect(reducer(root, { type: "completeItem", ref: { kind: "someday" as never, id: item.id }, at })).toBe(root);
+    expect(reducer(root, { type: "unknown" } as never)).toBe(root);
+  });
+});

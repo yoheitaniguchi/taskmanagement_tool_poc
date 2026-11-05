@@ -2,6 +2,7 @@
 // 任意の状態を外から置く操作は、検証し直す JSON の読み込み（replaceState）と、消去（reset）だけにする（検証を迂回する経路を作らないため）。
 // 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。StrictMode では reducer が2回呼ばれる）
 import { capture } from "./capture";
+import { parseAt } from "./common";
 import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
 import { completeItem, deleteItem, editItem, uncompleteItem, type CompletableKind, type ItemEdit, type ItemRef } from "./items";
 import { emptyState, type AppState, type OpResult } from "./types";
@@ -68,6 +69,12 @@ export function applyResult(root: Root, result: OpResult, undoMessage: string | 
   return { state: result.state, undo: undoMessage === null ? null : { before: root.state, after: result.state, message: undoMessage } };
 }
 
+/** 時刻を持つ操作：読めない時刻なら何もしない（型の外の値でも例外にしない。SEC-006） */
+function timed(root: Root, at: string, run: (now: Date) => Root): Root {
+  const now = parseAt(at);
+  return now === null ? root : run(now);
+}
+
 export function reducer(root: Root, action: Action): Root {
   switch (action.type) {
     case "replaceState": {
@@ -78,22 +85,26 @@ export function reducer(root: Root, action: Action): Root {
       return { state: emptyState(), undo: null };
     case "capture":
       // 収集は「元に戻す」の対象にしない（docs/design.md 6.4。間違えたら明確化で削除する）
-      return applyResult(root, capture(root.state, action.text, new Date(action.at), () => action.id), null);
+      return timed(root, action.at, (now) => applyResult(root, capture(root.state, action.text, now, () => action.id), null));
     case "clarify":
       // 明確化のすべての出口の直後に「元に戻す」を出す（D1。収集箱に戻るのは、この「元に戻す」だけ。5.3）
-      return applyResult(root, clarify(root.state, action.itemId, action.decision, new Date(action.at), takeIds(action.ids)), EXIT_MESSAGES[action.decision.exit]);
+      return timed(root, action.at, (now) =>
+        applyResult(root, clarify(root.state, action.itemId, action.decision, now, takeIds(action.ids)), EXIT_MESSAGES[action.decision.exit]),
+      );
     case "clarifyBulk":
-      return applyResult(
-        root,
-        clarifyBulk(root.state, action.itemIds, action.exit, new Date(action.at), takeIds(action.ids)),
-        bulkMessage(action.exit, action.itemIds.length),
+      return timed(root, action.at, (now) =>
+        applyResult(
+          root,
+          clarifyBulk(root.state, action.itemIds, action.exit, now, takeIds(action.ids)),
+          bulkMessage(action.exit, action.itemIds.length),
+        ),
       );
     case "editItem":
-      return applyResult(root, editItem(root.state, action.edit, new Date(action.at)), null);
+      return timed(root, action.at, (now) => applyResult(root, editItem(root.state, action.edit, now), null));
     case "completeItem":
-      return applyResult(root, completeItem(root.state, action.ref, new Date(action.at)), "完了にしました");
+      return timed(root, action.at, (now) => applyResult(root, completeItem(root.state, action.ref, now), "完了にしました"));
     case "uncompleteItem":
-      return applyResult(root, uncompleteItem(root.state, action.ref, new Date(action.at)), null);
+      return timed(root, action.at, (now) => applyResult(root, uncompleteItem(root.state, action.ref, now), null));
     case "deleteItem":
       return applyResult(root, deleteItem(root.state, action.ref), "削除しました");
     case "undo":
@@ -103,5 +114,8 @@ export function reducer(root: Root, action: Action): Root {
     case "dismissUndo":
     case "forgetUndo":
       return root.undo === null ? root : { ...root, undo: null };
+    default:
+      // 知らない操作は何もしない（SEC-006）
+      return root;
   }
 }
