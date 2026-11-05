@@ -267,7 +267,7 @@ function useFieldId(name: string) {
   return `edit-${name}${useId()}`;
 }
 
-function Field({ name, spec, value, onChange, autoFocus }: { name: string; spec: FieldSpec; value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+export function Field({ name, spec, value, onChange, autoFocus }: { name: string; spec: FieldSpec; value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
   const id = useFieldId(name);
   const hint = fieldHint(value, spec);
   return (

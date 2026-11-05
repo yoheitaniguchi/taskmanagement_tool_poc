@@ -3,11 +3,11 @@
 // - 全部作るか、何も作らない（途中までの状態を残さない。6.4）
 // - 元の収集箱の項目は状態から消える。作るものは収集日時を引き継ぐ
 // - 作成日時は確定した時刻。ただし端末の時計が遅れていて収集日時より前になるときは、収集日時に揃える（D15）
+import { checkCount, checkSize, fail, type Fail } from "./common";
 import { FIELDS, readField } from "./fields";
 import { isFiscalYear, isQuarter, isValidDate } from "./fiscal";
 import { isThemeId, type ThemeId } from "./themes";
 import type { Action, AppState, InboxItem, OpResult, Placement, Project, ReferenceItem, SomedayItem, WaitingFor } from "./types";
-import { LIMITS, stateSize } from "./validate";
 
 /** 自分で後でやる（次のアクション）。既存のプロジェクトに属させるか、単独なら任意でテーマを持つ */
 export interface NextDecision {
@@ -66,9 +66,6 @@ export function bulkMessage(exit: BulkExit, count: number): string {
   return `${count}件を${BULK_LABELS[exit]}`;
 }
 
-type Fail = { ok: false; error: string };
-const fail = (error: string): Fail => ({ ok: false, error });
-
 /** 作成日時：確定した時刻と収集日時の遅い方（D15） */
 function createdAtFor(item: InboxItem, now: Date): string {
   const at = now.toISOString();
@@ -96,10 +93,6 @@ function checkRequestedOn(value: string): Fail | null {
 function checkPlacement(p: Placement | null): Fail | null {
   if (p === null) return null;
   return isFiscalYear(p.fiscalYear) && isQuarter(p.quarter) ? null : fail("置く四半期が正しくありません");
-}
-
-function checkCount(list: readonly unknown[], label: string, adding = 1): Fail | null {
-  return list.length + adding > LIMITS.itemsPerList ? fail(`${label}は ${LIMITS.itemsPerList.toLocaleString("ja-JP")}件までです`) : null;
 }
 
 /** 1件を、決めた出口へ送ったときの状態（収集箱からは消さない。呼ぶ側で消す） */
@@ -196,6 +189,9 @@ function place(state: AppState, item: InboxItem, decision: Decision, now: Date, 
       // 最初の一手は2択だけ（「今やる」「日時が決まっている」は選べない。6.1）
       return fail("最初の一手は「自分で後でやる」か「誰かに任せる」から選んでください");
     }
+    default:
+      // 型の外の値（今のコードからは作れない）でも、例外にせず失敗を返す（SEC-006）
+      return fail("明確化の出口が正しくありません");
   }
 }
 
@@ -225,8 +221,7 @@ function makeWaiting(
 }
 
 function finish(result: OpResult): OpResult {
-  if (result.ok && stateSize(result.state) > LIMITS.stateChars) return fail("保存できる大きさの上限に達しています。資料やメモなどを減らしてから明確化してください");
-  return result;
+  return result.ok ? checkSize(result.state, "資料やメモなどを減らしてから明確化してください") : result;
 }
 
 /**
@@ -246,6 +241,7 @@ export function clarify(state: AppState, itemId: string, decision: Decision, now
  * 収集した文言が、作られる要素の内容（資料なら件名）になる。1件でも送れなければ、何も変えない
  */
 export function clarifyBulk(state: AppState, itemIds: readonly string[], exit: BulkExit, now: Date, newId: () => string): OpResult {
+  if (!Object.hasOwn(BULK_LABELS, exit)) return fail("一括振り分けの出口が正しくありません");
   const ids = new Set(itemIds);
   if (ids.size === 0) return fail("項目を選んでください");
   if (ids.size !== itemIds.length) return fail("同じ項目が重なっています");

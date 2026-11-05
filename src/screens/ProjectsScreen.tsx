@@ -1,11 +1,14 @@
-// プロジェクトの一覧（F04 の一部。docs/design.md 3.6）。
-// 件数は数字で出すだけで、0件を強調・警告しない（CLAUDE.md 4.3）。プロジェクトを直接足す操作は節目3で足す
+// プロジェクトの一覧（F04。docs/design.md 3.6）。
+// 件数は数字で出すだけで、0件を強調・警告しない（CLAUDE.md 4.3）。プロジェクトを直接足せる（D12）
 import { useState } from "react";
+import { ProjectForm } from "../components/ProjectForm";
 import { quarterLabel } from "../domain/fiscal";
+import type { ProjectInput } from "../domain/projects";
 import { projectSummaries, sortProjects, type ProjectOrder } from "../domain/summaries";
 import { themeLabel } from "../domain/themes";
-import type { AppState } from "../domain/types";
+import type { AppState, Placement } from "../domain/types";
 import { routeHref } from "../route";
+import { pushHash } from "../state/navigate";
 
 const ORDERS: { id: ProjectOrder; label: string }[] = [
   { id: "theme", label: "テーマ順" },
@@ -13,8 +16,17 @@ const ORDERS: { id: ProjectOrder; label: string }[] = [
   { id: "name", label: "名前順" },
 ];
 
-export function ProjectsScreen({ state }: { state: AppState }) {
+interface Props {
+  state: AppState;
+  now: Date;
+  disabledReason: string | null;
+  /** 作れたら新しいプロジェクトの id、できなければ理由 */
+  onCreate: (input: ProjectInput, placement: Placement | null) => { id: string } | { error: string };
+}
+
+export function ProjectsScreen({ state, now, disabledReason, onCreate }: Props) {
   const [order, setOrder] = useState<ProjectOrder>("theme");
+  const [adding, setAdding] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const all = projectSummaries(state);
   const active = all.filter((x) => x.project.status === "active");
@@ -24,6 +36,30 @@ export function ProjectsScreen({ state }: { state: AppState }) {
   return (
     <>
       <h1 tabIndex={-1}>プロジェクト</h1>
+      {adding ? (
+        <ProjectForm
+          title="プロジェクトを足す"
+          initial={null}
+          withPlacement
+          now={now}
+          disabledReason={disabledReason}
+          submitLabel="作る"
+          onSubmit={(input, placement) => {
+            const r = onCreate(input, placement);
+            if ("error" in r) return r.error;
+            // 作ったら詳細を開き、最初の一手を足しやすくする（G3）
+            pushHash(routeHref("projects", r.id));
+            return null;
+          }}
+          onCancel={() => setAdding(false)}
+        />
+      ) : (
+        <p>
+          <button type="button" disabled={disabledReason !== null} onClick={() => setAdding(true)}>
+            プロジェクトを足す
+          </button>
+        </p>
+      )}
       <section aria-labelledby="project-list">
         <div className="inbox__head">
           <h2 id="project-list">
@@ -41,7 +77,7 @@ export function ProjectsScreen({ state }: { state: AppState }) {
           </label>
         </div>
         {rows.length === 0 ? (
-          <p>まだありません。収集箱から明確化すると、ここに置かれます。</p>
+          <p>まだありません。収集箱から明確化するか、「プロジェクトを足す」で作ると、ここに並びます。</p>
         ) : (
           <table className="project-table">
             <thead>
@@ -65,7 +101,7 @@ export function ProjectsScreen({ state }: { state: AppState }) {
                     {p.outcome.split("\n", 1)[0]}
                   </td>
                   <td data-label="テーマ">{themeLabel(p.themeId)}</td>
-                  <td data-label="四半期">{p.placement ? quarterLabel(p.placement.fiscalYear, p.placement.quarter) : "置いていない"}</td>
+                  <td data-label="置いた四半期">{p.placement ? quarterLabel(p.placement.fiscalYear, p.placement.quarter) : "置いていない"}</td>
                   <td data-label="次のアクション">{nextActions}件</td>
                   <td data-label="連絡待ち">{waiting}件</td>
                   <td data-label="状態">{p.status === "active" ? "進行中" : "✓完了"}</td>

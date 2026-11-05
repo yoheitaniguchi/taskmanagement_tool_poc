@@ -1,5 +1,5 @@
-// アプリの外枠（節目2）：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
-// 年次目標・四半期シートとロードマップは、節目3で足す（docs/plans/milestone-2.md 2章）
+// アプリの外枠：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
+// 年次目標・四半期シートとロードマップは、節目3の PR 8・9 で足す（docs/plans/milestone-3.md 2章）
 import { useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
 import { AppHeader } from "./components/AppHeader";
@@ -12,11 +12,12 @@ import { StorageBanner } from "./components/StorageBanner";
 import { UndoBar } from "./components/UndoBar";
 import { capture } from "./domain/capture";
 import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
-import { completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
+import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
+import { completeProject, createProject, deleteProject, editProject, placeProject, uncompleteProject } from "./domain/projects";
 import type { OpResult } from "./domain/types";
 import type { RowContext } from "./components/ItemRows";
 import { backupFileName } from "./domain/persistence";
-import { counts } from "./domain/summaries";
+import { counts, projectSummaries, sortProjects } from "./domain/summaries";
 import { downloadText } from "./files";
 import { screenLabel } from "./route";
 import { HomeScreen } from "./screens/HomeScreen";
@@ -24,7 +25,7 @@ import { ClarifyFlow } from "./screens/ClarifyFlow";
 import { InboxScreen } from "./screens/InboxScreen";
 import { PlaceholderScreen } from "./screens/PlaceholderScreen";
 import { PlaceListScreen } from "./screens/PlaceListScreen";
-import { ProjectDetailScreen } from "./screens/ProjectDetailScreen";
+import { ProjectDetailScreen, type ProjectHandlers } from "./screens/ProjectDetailScreen";
 import { ProjectsScreen } from "./screens/ProjectsScreen";
 import { usePersistedState } from "./state/usePersistedState";
 import { useRoute } from "./state/useRoute";
@@ -120,7 +121,9 @@ export default function App() {
   const run = (action: Parameters<typeof store.dispatch>[0], recheck: () => OpResult): string | null => {
     if (store.dispatch(action)) return null;
     const result = recheck();
-    return result.ok ? "このタブでは変更できません" : result.error;
+    if (!result.ok) return result.error;
+    // 変えるものが無かった（同じ四半期に置き直したなど）ときは、失敗ではない
+    return result.state === state ? null : "このタブでは変更できません";
   };
 
   /** 置き場の一覧・プロジェクトの詳細の行で使う操作（docs/design.md 3.3） */
@@ -143,6 +146,47 @@ export default function App() {
     onDelete: (ref) => run({ type: "deleteItem", ref }, () => deleteItem(state, ref)),
   };
 
+  /** プロジェクトそのものの操作（docs/design.md 3.6・4.4） */
+  const projectHandlers: ProjectHandlers = {
+    onEditProject: (id, input) => {
+      const at = new Date();
+      return run({ type: "editProject", id, input, at: at.toISOString() }, () => editProject(state, id, input, at));
+    },
+    onPlaceProject: (id, placement) => {
+      const at = new Date();
+      return run({ type: "placeProject", id, placement, at: at.toISOString() }, () => placeProject(state, id, placement, at));
+    },
+    onCompleteProject: (id) => {
+      const at = new Date();
+      return run({ type: "completeProject", id, at: at.toISOString() }, () => completeProject(state, id, at));
+    },
+    onUncompleteProject: (id) => {
+      const at = new Date();
+      return run({ type: "uncompleteProject", id, at: at.toISOString() }, () => uncompleteProject(state, id, at));
+    },
+    onDeleteProject: (id, policy) => {
+      const at = new Date();
+      return run({ type: "deleteProject", id, childPolicy: policy, at: at.toISOString() }, () => deleteProject(state, id, policy, at));
+    },
+    onAddAction: (projectId, text) => {
+      const at = new Date();
+      const id = crypto.randomUUID();
+      return run({ type: "addActionToProject", projectId, text, at: at.toISOString(), id }, () => addActionToProject(state, projectId, text, at, () => id));
+    },
+    onAddWaiting: (projectId, input) => {
+      const at = new Date();
+      const id = crypto.randomUUID();
+      return run({ type: "addWaitingToProject", projectId, input, at: at.toISOString(), id }, () => addWaitingToProject(state, projectId, input, at, () => id));
+    },
+  };
+
+  const onCreateProject = (input: Parameters<typeof createProject>[1], placement: Parameters<typeof createProject>[2]) => {
+    const at = new Date();
+    const id = crypto.randomUUID();
+    const error = run({ type: "createProject", input, placement, at: at.toISOString(), id }, () => createProject(state, input, placement, at, () => id));
+    return error === null ? { id } : { error };
+  };
+
   const undo = store.root.undo;
   const onUndo = () => {
     store.dispatch({ type: "undo" });
@@ -153,7 +197,17 @@ export default function App() {
   const screen = (() => {
     switch (route.screen) {
       case "home":
-        return <HomeScreen counts={c} showIntro={!store.meta.introDismissed} onDismissIntro={store.dismissIntro} />;
+        return (
+          <HomeScreen
+            counts={c}
+            projects={sortProjects(
+              projectSummaries(state).filter((x) => x.project.status === "active"),
+              "theme",
+            )}
+            showIntro={!store.meta.introDismissed}
+            onDismissIntro={store.dismissIntro}
+          />
+        );
       case "inbox":
         return route.clarifyStep !== null ? (
           <ClarifyFlow
@@ -178,7 +232,11 @@ export default function App() {
       case "projects": {
         // id が無い（削除した・別の端末のURL）ときは一覧を出す（D14）
         const project = route.projectId === null ? undefined : state.projects.find((p) => p.id === route.projectId);
-        return project ? <ProjectDetailScreen key={project.id} project={project} state={state} ctx={rowCtx} /> : <ProjectsScreen state={state} />;
+        return project ? (
+          <ProjectDetailScreen key={project.id} project={project} state={state} ctx={rowCtx} handlers={projectHandlers} />
+        ) : (
+          <ProjectsScreen state={state} now={now} disabledReason={changeBlocked} onCreate={onCreateProject} />
+        );
       }
       default:
         return <PlaceholderScreen title={screenLabel(route.screen)} />;

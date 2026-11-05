@@ -1543,6 +1543,67 @@ body:has(.undo-bar) .app {
   margin: 0;
 }
 
+/* プロジェクトの操作（節目3 PR 6） */
+.project-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.attrs + .attrs {
+  margin-top: 8px;
+}
+
+.placement-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.placement-picker label {
+  font-weight: 500;
+  font-size: 0.93rem;
+}
+
+.placement-picker__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.placement-picker p {
+  margin: 0;
+}
+
+.add-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-child .item-edit__field {
+  width: 100%;
+}
+
+.delete-project__policy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin: 0 0 12px;
+}
+
+.delete-project__policy label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 @media (max-width: 720px) {
   .item-row__sub {
     margin-left: 28px;
