@@ -1,0 +1,455 @@
+{
+  "app": "taskmanagement_tool_poc",
+  "exportedAt": "2026-11-05T00:00:00.000Z",
+  "deviceName": "架空の端末",
+  "state": {
+    "schemaVersion": 1,
+    "inbox": [],
+    "actions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000528",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "text": "架空の次のアクション",
+        "projectId": "00000000-0000-4000-8000-000000000501",
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      }
+    ],
+    "waitingFors": [],
+    "projects": [
+      {
+        "id": "00000000-0000-4000-8000-000000000501",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事A",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000502",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事B：名称が長くて、カードの中で2行に折り返すかどうかを確かめるためのもの",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000503",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事C",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000504",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事D",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000505",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事E（完了）",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000506",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事F",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000507",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事G",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000508",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の起業の準備",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "startup",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 2
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000509",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の起業の検証",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "startup",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000510",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の健康の習慣",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000511",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の健康診断",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000512",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の家計の見直し",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "finance",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000513",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の趣味の講座",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000514",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の学びの読書会",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000515",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の右端の列の長い名称のプロジェクト（メニューがはみ出さないかを確かめる）",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000516",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の小さな片付け",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000517",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の家具の買い替え",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "finance",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000518",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の連絡の整理",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "relationships",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000519",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の道具の手入れ",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000520",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の資料の整理",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000521",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の置かずに終えたもの",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": null,
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000522",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の前年度からの続き",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2025,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000523",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の前年度の健康",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2025,
+          "quarter": 2
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000524",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の次の年度の仕事",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2027,
+          "quarter": 1
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      }
+    ],
+    "someday": [],
+    "references": [],
+    "annualGoals": [
+      {
+        "id": "00000000-0000-4000-8000-000000000527",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "themeId": "work",
+        "text": "架空の年次目標（仕事）"
+      }
+    ],
+    "quarterSheets": [
+      {
+        "id": "00000000-0000-4000-8000-000000000525",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "quarter": 3,
+        "focusThemeIds": [
+          "work",
+          "health",
+          "hobby_learning"
+        ],
+        "wontDo": "架空のやらないこと"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000526",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "quarter": 4,
+        "focusThemeIds": [
+          "finance"
+        ],
+        "wontDo": ""
+      }
+    ]
+  }
+}

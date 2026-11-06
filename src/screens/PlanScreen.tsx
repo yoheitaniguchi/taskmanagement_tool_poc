@@ -4,7 +4,8 @@
 // 状態の表示だけを置き、空欄は「未記入」と出すだけにする（警告しない。CLAUDE.md 4.3・12.2）
 import { useEffect, useRef, useState } from "react";
 import { Field } from "../components/Field";
-import { currentQuarter, FISCAL_YEAR_MAX, FISCAL_YEAR_MIN, fiscalYearLabel, quarterLabel, quarterMonths } from "../domain/fiscal";
+import { YearSwitcher } from "../components/YearSwitcher";
+import { currentQuarter, quarterLabel, quarterMonths } from "../domain/fiscal";
 import { FOCUS_MAX, PLAN_FIELDS } from "../domain/plan";
 import { placedProjectsByTheme, quarterOverview, type QuarterOverview } from "../domain/summaries";
 import { THEMES, themeLabel, type ThemeId } from "../domain/themes";
@@ -43,22 +44,7 @@ export function PlanScreen({ state, now, fiscalYear: fy, onChangeYear, disabledR
   return (
     <>
       <h1 tabIndex={-1}>年次目標・四半期シート</h1>
-      <div className="plan-year" role="group" aria-label="年度の切替">
-        <button type="button" aria-label="前の年度" disabled={fy <= FISCAL_YEAR_MIN} onClick={() => onChangeYear(fy - 1)}>
-          ◀
-        </button>
-        <p className="plan-year__label" aria-live="polite">
-          {fiscalYearLabel(fy)}（{fy}年4月〜{fy + 1}年3月）
-        </p>
-        <button type="button" aria-label="次の年度" disabled={fy >= FISCAL_YEAR_MAX} onClick={() => onChangeYear(fy + 1)}>
-          ▶
-        </button>
-        {fy !== cur.fiscalYear && (
-          <button type="button" onClick={() => onChangeYear(cur.fiscalYear)}>
-            今の年度へ
-          </button>
-        )}
-      </div>
+      <YearSwitcher fiscalYear={fy} now={now} onChange={onChangeYear} />
       {disabledReason !== null && <p className="hint">{disabledReason}</p>}
 
       <section aria-labelledby="plan-goals">

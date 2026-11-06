@@ -110,3 +110,28 @@ export function quarterOverview(state: AppState, fiscalYear: number, quarter: Qu
     .sort((a, b) => byTheme(a, b) || byName(a, b));
   return { fiscalYear, quarter, sheet, focusThemeIds: sheet?.focusThemeIds ?? [], projects, doneCount: projects.filter((p) => p.status === "done").length };
 }
+
+/** ロードマップの表（テーマ × 四半期）のセル（docs/design.md 3.8）。完了したものも含める（D8）。名前順 */
+export type RoadmapCells = Record<ThemeId, Record<Quarter, Project[]>>;
+
+export function roadmapCells(state: AppState, fiscalYear: number): RoadmapCells {
+  const cells = Object.fromEntries(THEMES.map((t) => [t.id, { 1: [], 2: [], 3: [], 4: [] }])) as unknown as RoadmapCells;
+  const list = state.projects.filter((p) => p.placement?.fiscalYear === fiscalYear).sort(byName);
+  for (const p of list) if (p.placement) cells[p.themeId][p.placement.quarter].push(p);
+  return cells;
+}
+
+/**
+ * 四半期に置いていない、進行中のプロジェクト（D6）。テーマの表示順 → 名前順。
+ * 完了したものは出さない（ロードマップは置いたものの1年の配置を眺めるもので、置かずに終えた小さなプロジェクトは並べない）
+ */
+export function unplacedProjects(state: AppState): Project[] {
+  return state.projects.filter((p) => p.status === "active" && p.placement === null).sort((a, b) => byTheme(a, b) || byName(a, b));
+}
+
+/** 表示している年度より前の年度に置いたまま、進行中のプロジェクト（D7）。置いた四半期の早い順 → テーマ順 → 名前順。警告はしない */
+export function activeProjectsPlacedBefore(state: AppState, fiscalYear: number): Project[] {
+  return state.projects
+    .filter((p) => p.status === "active" && p.placement !== null && p.placement.fiscalYear < fiscalYear)
+    .sort((a, b) => byQuarter(a, b) || byTheme(a, b) || byName(a, b));
+}
