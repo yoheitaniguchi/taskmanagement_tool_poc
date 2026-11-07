@@ -3,6 +3,8 @@ node_modules/
 dist/
 coverage/
 test-results/
+# 型チェック（tsc -b）の途中ファイル。手元で作られ、誤ってコミットに入りやすいため（2026-11-07 発注者承認）
+*.tsbuildinfo
 
 # 秘密情報（値の入っていない見本だけはコミットする。CLAUDE.md 8.3）
 .env*
