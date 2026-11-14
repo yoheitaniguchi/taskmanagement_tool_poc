@@ -322,5 +322,12 @@
 
 - 読んだもの：`CLAUDE.md`、企画書（`docs/proposal.md`）、`docs/design.md`、`docs/weekly-review.md`、`docs/operation-test-manual.md`、`docs/plans/milestone-4.md`、セキュリティレビュー①〜③のレポート、`src/` の画面・状態・保存・検証のコード、CI のワークフロー
 - 動かしたもの：`npm test`（25ファイル・311件成功）、`npm run lint`・`npm run typecheck`（エラー0）、`npm audit`（開発用の moderate 10件＝SEC-002、`--omit=dev` は0件）、`npm run build` と `vite preview`
-- 画面：架空のデータ（`src/domain/__fixtures__/roadmap-demo.json` に、架空の収集箱の項目・連絡待ち・いつか・多分・資料・次のアクションを足したもの）を、手元のブラウザ（Chromium）で開き、PC（1280px、ライト・ダーク）と Android の幅（Pixel 7 相当の412px、360px）で全画面を撮って確かめた。明確化は、収集 → 質問1〜3 → 確定 → 元に戻すの表示までを操作した
+- 画面：架空のデータ（`src/domain/__fixtures__/roadmap-demo.json` に、架空の収集箱の項目・連絡待ち・いつか・多分・資料・次のアクションを足したもの）を、手元のブラウザ（Chromium）で開き、PC（1280px、ライト・ダーク）と Android の幅（幅412px、360px）で全画面を撮って確かめた。明確化は、収集 → 質問1〜3 → 確定 → 元に戻すの表示までを操作した
 - 実データは使っていない。この文書にも、画面の写しにも、実データは含まない
+
+## 10. 判断の記録
+
+- 2026-11-14 発注者：Q1〜Q5 は、すべて推奨案のとおりと決めた（`docs/retrospective.md` 8章）
+  - IMP-13・IMP-14 は今週から使う（Q2）。IMP-01 は採る（Q4）。CR-001〜CR-006 は記録だけにし、12/27 の年次設計セッションで判断する（Q5）
+  - IMP-01・IMP-02・IMP-11 は P2・P3 の枠（振り返りの後に直す）に残す。見やすさの本体をバックログ（CR-002 への追記）にしたことと、分けて扱う
+  - P2・P3 の実装は、振り返りの完了後（11/16 以降、12/19 まで）に行う
