@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedSinceTransfer, emptyDeviceMeta, isValidDeviceName, markChanged, markExported, markImported, stateFingerprint, validateDeviceMeta, validateDeviceName } from "./transfer";
+import { changedSinceTransfer, emptyDeviceMeta, importActions, isValidDeviceName, markChanged, markExported, markImported, stateFingerprint, validateDeviceMeta, validateDeviceName } from "./transfer";
 import { emptyState } from "./types";
 import { sampleState } from "./testData";
 
@@ -92,5 +92,42 @@ describe("[@security] ブラウザの設定の検証（docs/design.md 6.1）", (
       { ...good, lastImport: { ...good.lastImport, extra: 1 } },
     ];
     for (const v of bad) expect(validateDeviceMeta(v)).toEqual(emptyDeviceMeta());
+  });
+});
+
+describe("読み込みの確認画面のボタン（IMP-08。importActions）", () => {
+  const AT = "2026-11-15T06:00:00.000Z";
+  const BLOCKED = "このタブは読み取り専用です";
+  const first = { showExport: true, exportPrimary: true, replaceLabel: "書き出さずに置き換える" };
+  const second = { showExport: true, exportPrimary: false, replaceLabel: "置き換える" };
+  const replaceOnly = (replaceLabel: string) => ({ showExport: false, exportPrimary: false, replaceLabel });
+
+  it("[@security] 変更があり、書き出せて、まだ書き出していないときは、書き出しを主ボタンにし、置き換えは「書き出さずに置き換える」にする", () => {
+    expect(importActions(true, null, null)).toEqual(first);
+  });
+
+  it("[@security] 書き出した後も、書き出すボタンを同じ位置に（主ボタンでなく）残し、置き換えは［置き換える］にする（2段目）", () => {
+    // 押したボタンの位置に［置き換える］が来ないように（続けて押しても、確かめる前に置き換わらない）
+    expect(importActions(true, null, AT)).toEqual(second);
+    expect(importActions(false, null, AT)).toEqual(second);
+  });
+
+  it("変更が無く、まだ書き出していないときは、［置き換える］だけ", () => {
+    expect(importActions(false, null, null)).toEqual(replaceOnly("置き換える"));
+  });
+
+  it("[@security] 変更があるのに書き出せないとき（端末名が無い、読み取り専用）は、書き出すボタンを出さず、置き換えは「書き出さずに置き換える」にする", () => {
+    for (const reason of ["書き出すには、先に ⋯ の［このブラウザの名前を変える］で名前を付けてください", BLOCKED]) {
+      expect(importActions(true, reason, null)).toEqual(replaceOnly("書き出さずに置き換える"));
+    }
+  });
+
+  it("書き出せないときは、書き出した後でも書き出すボタンを出さない", () => {
+    expect(importActions(true, BLOCKED, AT)).toEqual(replaceOnly("置き換える"));
+    expect(importActions(false, BLOCKED, AT)).toEqual(replaceOnly("置き換える"));
+  });
+
+  it("変更が無く書き出せないとき（起動時に保存データを読めなかったなど）は、［置き換える］だけ", () => {
+    expect(importActions(false, BLOCKED, null)).toEqual(replaceOnly("置き換える"));
   });
 });

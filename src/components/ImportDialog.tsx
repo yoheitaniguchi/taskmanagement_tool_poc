@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { parseExportText, tooLargeMessage } from "../domain/persistence";
 import { COUNT_LABELS, counts, type Counts } from "../domain/summaries";
-import type { DeviceMeta } from "../domain/transfer";
+import { importActions, type DeviceMeta } from "../domain/transfer";
 import type { AppState, ExportFile } from "../domain/types";
 import { LIMITS } from "../domain/validate";
 import { formatDateTime } from "../labels";
@@ -15,8 +15,8 @@ interface Props {
   current: AppState;
   meta: DeviceMeta;
   changed: boolean;
-  /** 今のデータを書き出す。書き出せたら、その日時 */
-  onExportCurrent: () => string | null;
+  /** 今のデータを書き出す。書き出せたら、その日時とファイル名 */
+  onExportCurrent: () => { at: string; fileName: string } | null;
   exportBlocked: string | null;
   /** 読めなかった保存データを書き出す（残っていなければ null） */
   onExportUnreadable: (() => void) | null;
@@ -29,11 +29,19 @@ const countText = (c: Counts) => COUNT_LABELS.map(([k, label]) => `${label} ${c[
 export function ImportDialog({ current, meta, changed, onExportCurrent, exportBlocked, onExportUnreadable, onImport, onClose }: Props) {
   const [errors, setErrors] = useState<string[]>([]);
   const [loaded, setLoaded] = useState<ExportFile | null>(null);
-  const [exportedAt, setExportedAt] = useState<string | null>(null);
+  const [exported, setExported] = useState<{ at: string; fileName: string } | null>(null);
+  const exportedAt = exported?.at ?? null;
   const [failed, setFailed] = useState(false);
   // 読み込みの途中で別のファイルを選んだとき、古い結果で上書きしないための番号
   const selection = useRef(0);
   const now = new Date();
+  // 書き出しと置き換えを2段に分ける（IMP-08）。ボタンの決め方は src/domain/transfer.ts の importActions
+  const actions = importActions(changed, exportBlocked, exportedAt);
+  // もう一度書き出して取り消されたときも、前に書き出した記録は残す（書き出せた事実は変わらないため）
+  const exportCurrent = () => {
+    const out = onExportCurrent();
+    if (out) setExported(out);
+  };
 
   const onFile = async (file: File | undefined) => {
     const mine = ++selection.current;
@@ -120,8 +128,16 @@ export function ImportDialog({ current, meta, changed, onExportCurrent, exportBl
             changed={changed}
             exportedAt={exportedAt}
             exportBlocked={exportBlocked}
-            onExport={() => setExportedAt(onExportCurrent())}
+            onExport={exportCurrent}
+            exportInActions={actions.showExport}
+            exportedFileName={exported?.fileName ?? null}
           />
+          {actions.exportPrimary && <p className="hint">［今のデータを書き出す］を押すと、置き換えのボタンが［置き換える］に変わります。</p>}
+          {exported !== null && (
+            <p className="hint">
+              画面の下か通知の欄に、このファイル名の「ダウンロード完了」が出たことを確かめてから、［置き換える］を押してください。保存の画面で取り消したときは、もう一度［今のデータを書き出す］を押してください。書き出しが保存し終えたかは、このアプリからは分かりません。
+            </p>
+          )}
         </>
       )}
       {failed && (
@@ -143,8 +159,14 @@ export function ImportDialog({ current, meta, changed, onExportCurrent, exportBl
             else setFailed(true);
           }}
         >
-          置き換える
+          {loaded === null ? "置き換える" : actions.replaceLabel}
         </button>
+        {/* 書き出した後も、同じ文言・同じ位置に残す（押した位置に［置き換える］が来ないように。transfer.ts の importActions） */}
+        {loaded !== null && actions.showExport && (
+          <button type="button" className={actions.exportPrimary ? "button--primary" : undefined} onClick={exportCurrent}>
+            今のデータを書き出す
+          </button>
+        )}
       </div>
     </Modal>
   );

@@ -7,6 +7,14 @@ import { formatChars, formatDateTime } from "../labels";
 import { Icon } from "./Icon";
 import { MenuButton } from "./MenuButton";
 import { ThemeToggle } from "./ThemeToggle";
+import type { PersistenceStatus } from "../domain/persistence";
+
+/** 保存の保護の状態の表示（IMP-07）。状態だけを示し、指示は出さない（CLAUDE.md 4.3・12.2） */
+const PERSISTENCE_LABELS: Record<PersistenceStatus, string> = {
+  persisted: "あり",
+  "not-persisted": "なし（空き容量が少ないとき、ブラウザがこのアプリのデータを消すことがあります）",
+  unsupported: "このブラウザでは使えません",
+};
 
 interface Props {
   /** 収集の入力欄 */
@@ -18,6 +26,8 @@ interface Props {
   exportBlocked: string | null;
   hasBackup: boolean;
   usage: () => number;
+  /** 保存の保護の状態（IMP-07。確かめている間は null） */
+  persistence: PersistenceStatus | null;
   onExport: () => void;
   onImport: () => void;
   onExportBackup: () => void;
@@ -33,6 +43,7 @@ export function AppHeader({
   exportBlocked,
   hasBackup,
   usage,
+  persistence,
   onExport,
   onImport,
   onExportBackup,
@@ -80,6 +91,7 @@ export function AppHeader({
               <p className="menu__note">
                 このアプリの保存データ：{formatChars(usage())}
               </p>
+              {persistence !== null && <p className="menu__note">保存の保護：{PERSISTENCE_LABELS[persistence]}</p>}
               <button
                 type="button"
                 className="button--danger"

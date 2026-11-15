@@ -19,6 +19,8 @@ import {
   exportFileName,
   storageUsage,
   type LoadResult,
+  requestPersistence,
+  type PersistenceStatus,
 } from "../domain/persistence";
 import { initialRoot, reducer, type Action } from "../domain/reducer";
 import { changedSinceTransfer, emptyDeviceMeta, markChanged, markExported, markImported, stateFingerprint, type DeviceMeta } from "../domain/transfer";
@@ -60,6 +62,18 @@ export function usePersistedState() {
   const readOnlyRef = useRef(readOnly);
   readOnlyRef.current = readOnly;
   const [recovered, setRecovered] = useState(false);
+  // 保存の保護（IMP-07）。起動時に1回だけ求め、結果は画面の状態として持つだけ（保存しない）。
+  // 開発時に2回呼ばれても、2回目はすでに保護されているかを確かめるだけになる
+  const [persistence, setPersistence] = useState<PersistenceStatus | null>(null);
+  useEffect(() => {
+    let alive = true;
+    void requestPersistence().then((r) => {
+      if (alive) setPersistence(r);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
   /**
    * 起動時に読めなかった保存データが、まだ元のキーに残っている（回復していない）。
    * この間の画面の状態は空なので、「今のデータ」として書き出させない（空のファイルを本物のバックアップと誤らないため）
@@ -205,5 +219,7 @@ export function usePersistedState() {
     /** 読めなかった保存データ（元のキーの値そのまま）。回復した後は null */
     readUnreadable: () => (unreadableRef.current ? readUnreadableState(getBrowserStorage()) : null),
     storageUsage: () => storageUsage(getBrowserStorage()),
+    /** 保存の保護の状態（確かめている間は null） */
+    persistence,
   };
 }

@@ -241,3 +241,46 @@ export function parseExportText(text: string): ExportParseResult {
 export function tooLargeMessage(): string {
   return `ファイルが大きすぎます（上限は ${LIMITS.importBytes / 1024 / 1024}MiB）`;
 }
+
+/** 保存の保護のうち、ここで使う操作だけ（IMP-07） */
+export type PersistenceManager = Partial<Pick<StorageManager, "persisted" | "persist">>;
+
+/**
+ * 使えるときだけ、navigator.storage の persisted・persist の2つだけを包んで返す。navigator.storage を取り出すのはここだけ
+ * （CLAUDE.md 8.2。ESLint で禁じている）。本物をそのまま返さないのは、ほかのファイルから estimate や getDirectory
+ * （ブラウザの中のファイル領域。名前空間の外）を使えないようにするため
+ */
+export function getStorageManager(): PersistenceManager | null {
+  try {
+    const m = typeof navigator === "undefined" ? undefined : navigator.storage;
+    if (!m || typeof m.persisted !== "function" || typeof m.persist !== "function") return null;
+    return { persisted: () => m.persisted(), persist: () => m.persist() };
+  } catch {
+    return null;
+  }
+}
+
+export type PersistenceStatus = "persisted" | "not-persisted" | "unsupported";
+
+/**
+ * ブラウザに「保存の保護」（消されにくい保存）を求め、その結果を返す（IMP-07。docs/design.md 6.1）。
+ * 端末の空き容量が少なくなると、保護されていないサイトのデータはブラウザが丸ごと消すことがあるため。
+ * 端末の中の設定だけで、外部とは通信しない。すでに保護されていれば求めない。保護はオリジン全体にかかる。
+ * 結果は画面の状態として持つだけで、保存しない（AppState・JSON・このブラウザの設定に入れない）
+ */
+export async function requestPersistence(manager: PersistenceManager | null = getStorageManager()): Promise<PersistenceStatus> {
+  if (!manager || typeof manager.persisted !== "function" || typeof manager.persist !== "function") return "unsupported";
+  let persisted: boolean;
+  try {
+    persisted = await manager.persisted();
+  } catch {
+    return "unsupported";
+  }
+  if (persisted) return "persisted";
+  try {
+    return (await manager.persist()) ? "persisted" : "not-persisted";
+  } catch {
+    // 状態は読めたが、求めるのに失敗した。使えるが保護されていないので not-persisted とする
+    return "not-persisted";
+  }
+}

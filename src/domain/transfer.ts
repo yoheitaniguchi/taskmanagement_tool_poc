@@ -145,3 +145,31 @@ export function markImported(meta: DeviceMeta, file: Pick<ExportFile, "deviceNam
 export function markChanged(meta: DeviceMeta, now: Date): DeviceMeta {
   return { ...meta, lastChangedAt: now.toISOString() };
 }
+
+/** JSON の読み込みの確認画面に出す操作（IMP-08。docs/design.md 6.2、計画 2.5） */
+export interface ImportActions {
+  /** 操作の行に、今のデータを書き出すボタンを出すか */
+  showExport: boolean;
+  /** 書き出すボタンを主ボタンにするか（まだ書き出していないとき） */
+  exportPrimary: boolean;
+  /** 置き換えるボタンの文言。変更を書き出さないまま置き換えるときは、そのことを文言で示す */
+  replaceLabel: "置き換える" | "書き出さずに置き換える";
+}
+
+/**
+ * 読み込みの確認画面のボタンを決める。書き出しと置き換えは2段に分け、書き出した後に置き換える
+ * （ダウンロードが保存し終えたかはアプリから分からないので、利用者がダウンロードの知らせを見てから置き換えられるように）。
+ * - 書き出すボタンは、変更があるか書き出した後で、書き出せるときに出す。書き出した後も同じ文言・同じ位置に残す
+ *   （押したボタンの位置に［置き換える］が来て、続けて押すと確かめる前に置き換わるのを防ぐため）
+ * - 書き出すボタンは、まだ書き出していないときだけ主ボタンにする
+ * - 置き換えるボタンは、変更があってまだ書き出していないとき（書き出せないときも）［書き出さずに置き換える］にする
+ */
+export function importActions(changed: boolean, exportBlocked: string | null, exportedAt: string | null): ImportActions {
+  const showExport = exportBlocked === null && (changed || exportedAt !== null);
+  const exported = exportedAt !== null;
+  return {
+    showExport,
+    exportPrimary: showExport && !exported,
+    replaceLabel: changed && !exported ? "書き出さずに置き換える" : "置き換える",
+  };
+}
