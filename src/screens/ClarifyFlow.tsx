@@ -428,17 +428,19 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 )}
                 {!isProject && d.choice === "next" && d.projectId === "" && (
                   <>
-                    <label htmlFor="clarify-theme">
-                      テーマ <FieldMark required={false} />
-                    </label>
-                    <select id="clarify-theme" value={d.standaloneTheme} onChange={(e) => update({ standaloneTheme: e.target.value })}>
-                      <option value="">なし</option>
-                      {THEMES.map((t) => (
-                        <option key={t.id} value={t.id}>
+                    {/* 単独の次の一手のテーマは、プロジェクトのテーマと同じボタンの並びで1回押して決める（R-2。振り返り 7.2 の A）。
+                        任意なので「なし」を初めに置く。次のアクションの編集・移動の画面はプルダウンのまま（振り返り 確認事項 5） */}
+                    <fieldset className="clarify__themes">
+                      <legend>
+                        テーマ <FieldMark required={false} />
+                      </legend>
+                      {[{ id: "", label: "なし" }, ...THEMES].map((t) => (
+                        <label key={t.id} className="chip">
+                          <input type="radio" name="clarify-standalone-theme" checked={d.standaloneTheme === t.id} onChange={() => update({ standaloneTheme: t.id })} />
                           {t.label}
-                        </option>
+                        </label>
                       ))}
-                    </select>
+                    </fieldset>
                   </>
                 )}
                 {errorBox}

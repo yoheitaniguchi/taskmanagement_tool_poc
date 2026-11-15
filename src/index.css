@@ -2138,3 +2138,8 @@ body:has(.undo-bar) .app {
     height: 44px;
   }
 }
+
+/* プロジェクトの詳細で、属性の下に置いた操作の行（IMP-06） */
+.attrs + .project-ops {
+  margin-top: 16px;
+}
