@@ -3,10 +3,10 @@
 - **最終更新日時：** 2026-11-15 22:10（日本時間）
 - **最終担当 AI：** Claude Code（実装担当）
 - **対象ブランチ：** `claude/project-thread-ad3sgr`
-- **関連 Issue / PR：** Issue は作成予定。前の PR #32 は、新しい進め方（AGENTS.md 3章）でやり直すために洋平さんが閉じた（2026-11-15）
+- **関連 Issue / PR：** Issue #36。前の PR #32 は、新しい進め方（AGENTS.md 3章）でやり直すために洋平さんが閉じた（2026-11-15）
 - **計画：** `docs/plans/improvements-after-retrospective.md` の 2.4（IMP-07）・2.5（IMP-08）。改善提案 `docs/reviews/improvement-review-2026-11-09.md` の 6.2・6.3
 
-この PR は、詳細ルール 6章の試し運転の1本目です。実装は Claude Code が済ませたので、**レビューは別の AI が行います**（AGENTS.md 2章「作った人は、確かめない」）。
+この PR は、詳細ルール 6章の試し運転の1本目です。実装は Claude Code が済ませたので、**レビューは別の AI（Antigravity など）が行います**（AGENTS.md 2章「作った人は、確かめない」。2026-11-15 洋平さんの決定）。
 
 ## 1. 現在のステータス
 
