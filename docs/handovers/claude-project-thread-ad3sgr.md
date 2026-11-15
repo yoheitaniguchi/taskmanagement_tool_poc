@@ -3,7 +3,7 @@
 - **最終更新日時：** 2026-11-16 07:05（日本時間）
 - **最終担当 AI：** Claude Code（実行と記録の担当）
 - **対象ブランチ：** `claude/project-thread-ad3sgr`
-- **関連 Issue / PR：** Issue #42。前の PR 15 の引き継ぎ文書は `docs/handovers/archive/claude-project-thread-ad3sgr-pr15.md` に移した（AGENTS.md 6章）
+- **関連 Issue / PR：** Issue #42、PR #43。前の PR 15 の引き継ぎ文書は `docs/handovers/archive/claude-project-thread-ad3sgr-pr15.md` に移した（AGENTS.md 6章）
 - **計画：** `docs/plans/improvements-after-retrospective.md` の 4.1（点検）・4.2（完了の記録）
 
 詳細ルール 6章の試し運転の4本目です。点検と記録は Claude Code が済ませたので、**レビューは別の AI が行います**（AGENTS.md 2章「作った人は、確かめない」）。文書だけの PR で、アプリのコードは変えていません。
