@@ -84,6 +84,7 @@ export function ProjectsScreen({ state, now, disabledReason, onCreate }: Props) 
               <tr>
                 <th scope="col">名称</th>
                 <th scope="col">目的とする成果</th>
+                <th scope="col">次のアクション（先頭）</th>
                 <th scope="col">テーマ</th>
                 <th scope="col">置いた四半期</th>
                 <th scope="col">次のアクション</th>
@@ -92,7 +93,7 @@ export function ProjectsScreen({ state, now, disabledReason, onCreate }: Props) 
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ project: p, nextActions, waiting }) => (
+              {rows.map(({ project: p, nextActions, waiting, firstNextAction }) => (
                 <tr key={p.id} className={p.status === "done" ? "project-table__row--done" : undefined}>
                   <th scope="row" className="project-table__name">
                     <a href={routeHref("projects", p.id)}>{p.name}</a>
@@ -100,13 +101,17 @@ export function ProjectsScreen({ state, now, disabledReason, onCreate }: Props) 
                   <td className="project-table__outcome" data-label="目的とする成果">
                     {p.outcome.split("\n", 1)[0]}
                   </td>
+                  {/* 並びの先頭の未着手の次のアクション。無ければ「—」だけ（IMP-01。CLAUDE.md 4.3） */}
+                  <td className="project-table__first" data-label="次のアクション（先頭）">
+                    {firstNextAction ?? "—"}
+                  </td>
                   <td data-label="テーマ">
                     <ThemeLabel id={p.themeId} />
                   </td>
                   <td data-label="置いた四半期">{p.placement ? quarterLabel(p.placement.fiscalYear, p.placement.quarter) : "置いていない"}</td>
                   <td data-label="次のアクション">{nextActions}件</td>
                   <td data-label="連絡待ち">{waiting}件</td>
-                  <td data-label="状態">{p.status === "active" ? "進行中" : "✓完了"}</td>
+                  <td className="project-table__status" data-label="状態">{p.status === "active" ? "進行中" : "✓完了"}</td>
                 </tr>
               ))}
             </tbody>
