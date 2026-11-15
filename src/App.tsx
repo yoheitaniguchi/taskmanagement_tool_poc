@@ -1,7 +1,6 @@
 // アプリの外枠：共通の画面（収集の入力欄・書き出し・データのメニュー・受け渡しの状態）、画面の切替、各画面。
 import { useEffect, useMemo, useState } from "react";
 import { PREVIEW_PR } from "./buildInfo";
-import { LightVariantSwitch } from "./components/LightVariantSwitch";
 import { AppHeader } from "./components/AppHeader";
 import { CaptureBox } from "./components/CaptureBox";
 import { NavTabs } from "./components/NavTabs";
@@ -335,7 +334,6 @@ export default function App() {
         // PR プレビューは誰でも開けるうえ、マージ前のコードで動く。実データを入れないよう常に知らせる（CLAUDE.md 8.3、docs/design.md 3.1）
         <div className="banner banner--warn preview-banner" role="note">
           <p>プレビュー（PR #{PREVIEW_PR}）：実際のデータを入れないでください。保存先は本番と別です。</p>
-          <LightVariantSwitch />
         </div>
       )}
       <AppHeader

@@ -1,5 +1,5 @@
 // ライトモードの色のコントラストを確かめる（振り返り 7.1、計画 2.1、docs/design.md 7章）。
-// src/index.css のいちばん上の :root（@media の中の :root ではない）と、PRプレビューで比べる案の値を読み、
+// src/index.css のいちばん上の :root（@media の中の :root ではない）の値を読み、
 // 文字と背景の組み合わせが WCAG AA の 4.5:1 以上であることを確かめる
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -49,11 +49,9 @@ const PAIRS: [string, string][] = [
 ];
 
 const base = tokens(":root");
-const sets: [string, Record<string, string>][] = [["今の値（:root）", base]];
-for (const v of ["a", "b", "c", "d", "e"]) {
-  const selector = `:root[data-theme="light"][data-light-variant="${v}"]`;
-  if (css.includes(`${selector} {`)) sets.push([`案 ${v.toUpperCase()}`, { ...base, ...tokens(selector) }]);
-}
+/** 一段下げる前の値（--accent-soft #eef2ff と --surface #ffffff）の明るさの比。選んだ状態が面に埋もれないよう、これより小さくしない */
+const ACCENT_SOFT_RATIO_BEFORE = 1.118;
+const sets: [string, Record<string, string>][] = [["ライトモード（:root）", base]];
 
 describe("ライトモードのコントラスト（WCAG AA 4.5:1）", () => {
   it("いちばん上の :root を読めている", () => {
@@ -67,9 +65,8 @@ describe("ライトモードのコントラスト（WCAG AA 4.5:1）", () => {
       expect(low).toEqual([]);
     });
 
-    it(`${name}：選んだ状態の背景（--accent-soft）と面の明るさの比を、今の値より小さくしない`, () => {
-      const now = contrast(base["--accent-soft"], base["--surface"]);
-      expect(contrast(t["--accent-soft"], t["--surface"])).toBeGreaterThanOrEqual(now - 0.01);
+    it(`${name}：選んだ状態の背景（--accent-soft）と面の明るさの比を、一段下げる前より小さくしない`, () => {
+      expect(contrast(t["--accent-soft"], t["--surface"])).toBeGreaterThanOrEqual(ACCENT_SOFT_RATIO_BEFORE);
     });
   }
 });
