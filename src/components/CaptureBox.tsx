@@ -3,6 +3,7 @@
 // 入れた後も入力欄にフォーカスを残し、続けて入れられるようにする
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { canCapture, captureTextError } from "../domain/capture";
+import { useMediaQuery } from "../state/useMediaQuery";
 
 interface Props {
   /** 今の収集箱の未処理の件数（入れた後の表示に使う） */
@@ -21,6 +22,8 @@ export function CaptureBox({ inboxCount, disabledReason, onCapture }: Props) {
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
+  // スマホの幅では薄い文字が途中で切れるので短くする（IMP-05。確定はキーボードのボタンで足りる。幅360pxでも切れない長さ）。幅は index.css のスマホの区切りと同じ
+  const narrow = useMediaQuery("(max-width: 720px)");
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const textError = captureTextError(value);
@@ -69,7 +72,7 @@ export function CaptureBox({ inboxCount, disabledReason, onCapture }: Props) {
           type="text"
           className="capture__input"
           value={value}
-          placeholder="思いついたことを入力して Enter"
+          placeholder={narrow ? "思いつきを入力" : "思いついたことを入力して Enter"}
           autoComplete="off"
           enterKeyHint="done"
           disabled={disabled}

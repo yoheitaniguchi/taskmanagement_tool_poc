@@ -91,7 +91,11 @@ h1 {
   margin: 8px 0 20px;
 }
 
-h1:focus {
+/* 画面の切替・質問の切替で、読み上げとキーボードのためにフォーカスを移す見出し（docs/design.md 3.5）には枠を出さない。
+   押せるものではないので、入力欄のような枠で誤らせないため（IMP-10）。Tab で移るボタンなどの枠は今のまま */
+[data-route-focus]:focus,
+h1[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus {
   outline: none;
 }
 
@@ -374,6 +378,7 @@ a.button {
 
 /* ---- 収集の入力欄（F01） ---- */
 .capture {
+  position: relative;
   flex: 1 1 320px;
   min-width: 0;
 }
@@ -388,11 +393,29 @@ a.button {
   min-width: 0;
 }
 
+/* 知らせは入力欄のすぐ下に重ねて出し、上部の固定部分の高さに数えない（IMP-04。出し入れで画面がずれないように）。
+   読み上げに伝えるため、要素は常に置いて中身だけを変える（CaptureBox.tsx）。空のときは何も見えない */
 .capture__hint {
-  min-height: 1.4em;
-  margin: 2px 0 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin: 4px 0 0;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.capture__hint:empty {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .capture__hint--error {
@@ -891,9 +914,15 @@ tbody tr:hover > * {
     height: 22px;
   }
 
+  /* 文字を1行に収める（IMP-03。幅360pxで「次のアクション」「プロジェクト」が収まる）。
+     「メニュー」はボタンなので中身が縦の中央に寄る。ほかのタブ（リンク）と同じ上揃えにする */
   .tabs__tab {
     display: flex;
-    white-space: normal;
+    justify-content: flex-start;
+    white-space: nowrap;
+    letter-spacing: -0.04em;
+    padding-left: 2px;
+    padding-right: 2px;
     text-align: center;
     line-height: 1.2;
   }
