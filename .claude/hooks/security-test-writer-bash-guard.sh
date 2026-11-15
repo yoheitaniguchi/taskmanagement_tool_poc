@@ -3,7 +3,7 @@
 # 追加したテストが実際に動く（脆弱性があれば失敗する）ことをこのサブエージェント自身が確認できるよう、
 # テスト実行・型チェック・lintのコマンドだけを許可する。security-reviewer用フックと同様、
 # 連結演算子・コマンド置換・リダイレクトは無条件で拒否する。
-# 技術スタックはCLAUDE.md 8.1（React・Vite・TypeScript・Vitest）を前提にしている。
+# 技術スタックは開発指示書（docs/ai/開発指示書-フェーズ1.md。2026-11-15 まで CLAUDE.md）8.1（React・Vite・TypeScript・Vitest）を前提にしている。
 set -euo pipefail
 
 # jq が無いと set -e で 127 終了になり、PreToolUse はブロックせずに通してしまう（fail-open）。無ければ拒否する
