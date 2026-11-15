@@ -91,8 +91,19 @@ h1 {
   margin: 8px 0 20px;
 }
 
-h1:focus {
+/* 画面の切替・質問の切替で、読み上げとキーボードのためにフォーカスを移す見出し（docs/design.md 3.5）には枠を出さない。
+   押せるものではないので、入力欄のような枠で誤らせないため（IMP-10）。Tab で移るボタンなどの枠は今のまま */
+[data-route-focus]:focus,
+h1[tabindex="-1"]:focus,
+h2[tabindex="-1"]:focus {
   outline: none;
+}
+
+/* 枠が無いので、フォーカスした見出しが上部の固定部分の下に隠れないようにする */
+[data-route-focus],
+h1[tabindex="-1"],
+h2[tabindex="-1"] {
+  scroll-margin-top: 96px;
 }
 
 h2 {
@@ -374,6 +385,7 @@ a.button {
 
 /* ---- 収集の入力欄（F01） ---- */
 .capture {
+  position: relative;
   flex: 1 1 320px;
   min-width: 0;
 }
@@ -388,11 +400,32 @@ a.button {
   min-width: 0;
 }
 
+/* 入力欄の下の文言。空のときは高さを取らない（IMP-04。上部の固定部分を低くする）。
+   読み上げに伝えるため、要素は常に置いて中身だけを変える（CaptureBox.tsx）。
+   使えない理由・誤りのような消えない文言は、流れの中に出す（受け渡しの状態の行を隠し続けないため） */
 .capture__hint {
-  min-height: 1.4em;
   margin: 2px 0 0;
   color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+.capture__hint:empty {
+  margin: 0;
+}
+
+/* 3秒で消える「収集箱に入れました」だけは、すぐ下に重ねて出す（出し入れで画面がずれないように。IMP-04） */
+.capture__hint--overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  margin-top: 4px;
+  padding: 4px 8px;
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-sm);
+  background: var(--info-bg);
+  color: var(--text);
 }
 
 .capture__hint--error {
@@ -868,7 +901,8 @@ tbody tr:hover > * {
     right: 0;
     z-index: 40;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    /* 5つの列を同じ幅にする（文字の長いタブだけ広がって、アイコンの間隔がずれないように） */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
     padding: 0 0 env(safe-area-inset-bottom);
     background: var(--surface);
@@ -891,11 +925,21 @@ tbody tr:hover > * {
     height: 22px;
   }
 
+  /* 文字を1行に収める（IMP-03。幅360pxで「次のアクション」「プロジェクト」が収まる）。
+     「メニュー」はボタンなので中身が縦の中央に寄る。ほかのタブ（リンク）と同じ上揃えにする */
   .tabs__tab {
     display: flex;
-    white-space: normal;
+    justify-content: flex-start;
+    white-space: nowrap;
+    padding-left: 2px;
+    padding-right: 2px;
     text-align: center;
     line-height: 1.2;
+  }
+
+  /* 字間を詰めるのは文字だけ（件数の数字は詰めない） */
+  .tabs__tab > span:not(.tabs__count) {
+    letter-spacing: -0.04em;
   }
 
   .tabs__tab--secondary {
@@ -2247,4 +2291,22 @@ body:has(.undo-bar) .app {
 /* プロジェクトの詳細で、属性の下に置いた操作の行（IMP-06） */
 .attrs + .project-ops {
   margin-top: 16px;
+}
+
+/* 幅380px以下では、隣のタブの文字と間が空くよう、文字を少し小さく詰める（IMP-03） */
+@media (max-width: 380px) {
+  .tabs__tab {
+    font-size: 0.68rem;
+  }
+
+  .tabs__tab > span:not(.tabs__count) {
+    letter-spacing: -0.06em;
+  }
+}
+
+/* 端末の文字サイズを大きくして、画面の幅がごく狭くなったときは、タブの文字を折り返す（タブバーが画面の外にはみ出さないように） */
+@media (max-width: 300px) {
+  .tabs__tab {
+    white-space: normal;
+  }
 }
