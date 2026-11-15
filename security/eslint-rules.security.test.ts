@@ -52,11 +52,17 @@ describe("[@security] ESLint による禁止", () => {
     ["document.cookie", "export const r = () => document.cookie;"],
     ["cookieStore", 'export const r = () => cookieStore.get("k");'],
     ["caches", 'export const r = () => caches.open("k");'],
+    ['navigator["storage"]', 'export const r = () => navigator["storage"].persist();'],
+    ["navigator.storageBuckets", 'export const r = () => navigator.storageBuckets.open("k");'],
+    ["openDatabase", 'export const r = () => openDatabase("k", "1", "k", 1);'],
   ];
+  // ほかの規則のエラー（未定義の変数など）で通ってしまわないよう、保存の禁止の規則で止まったことを確かめる
+  const STORAGE_RULES = ["no-restricted-globals", "no-restricted-properties"];
+  const stoppedByStorageRule = (ids: string[]) => ids.some((id) => STORAGE_RULES.includes(id));
   for (const [label, code] of storageCode) {
     it(`[@security] ${label} は、persistence.ts の外ではエラーになる`, async () => {
-      expect(await ruleIds(code, APP_FILE)).not.toEqual([]);
-      expect(await ruleIds(code, "src/theme.ts")).not.toEqual([]);
+      expect(stoppedByStorageRule(await ruleIds(code, APP_FILE))).toBe(true);
+      expect(stoppedByStorageRule(await ruleIds(code, "src/theme.ts"))).toBe(true);
     });
   }
 

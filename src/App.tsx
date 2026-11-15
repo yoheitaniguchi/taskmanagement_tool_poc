@@ -76,8 +76,8 @@ export default function App() {
   /** 今のデータを書き出せないときの理由。端末名が無いのは、確認画面の中から名前を付けられないので理由に含める */
   const dialogExportBlocked = store.exportBlocked ?? (store.meta.deviceName === null ? "書き出すには、先に ⋯ の［このブラウザの名前を変える］で名前を付けてください" : null);
 
-  /** 書き出す。書き出せたら日時を返す。端末名がまだ無ければ、先に名前を決める画面を出す */
-  const exportNow = (): string | null => {
+  /** 書き出す。書き出せたら日時とファイル名を返す。端末名がまだ無ければ、先に名前を決める画面を出す */
+  const exportNow = (): { at: string; fileName: string } | null => {
     if (store.meta.deviceName === null) {
       setDialog("nameThenExport");
       return null;
@@ -85,7 +85,7 @@ export default function App() {
     const out = store.prepareExport();
     if (!out) return null;
     downloadText(out.fileName, out.text);
-    return out.at;
+    return { at: out.at, fileName: out.fileName };
   };
 
   const exportBackup = () => {

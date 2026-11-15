@@ -8,7 +8,7 @@ interface Props {
   onExport: () => void;
   /** 書き出せないときの理由（書き出せるなら null） */
   exportBlocked: string | null;
-  /** 書き出すボタンを確認画面の操作の行に置くとき true（読み込みの確認。IMP-08）。このときは、ここにはボタンを出さない */
+  /** 書き出すボタンを確認画面の操作の行に置くとき true（読み込みの確認。決め方は transfer.ts の importActions。IMP-08）。このときは、ここにはボタンを出さない */
   exportInActions?: boolean;
   /** 書き出したファイルの名前（読み込みの確認で、どのファイルを書き出したかを示す） */
   exportedFileName?: string | null;
@@ -29,7 +29,7 @@ export function TransferWarning({ changed, exportedAt, onExport, exportBlocked, 
       <p>
         <span aria-hidden="true">⚠ </span>最後に書き出した後に、このブラウザで変更があります
       </p>
-      {!(exportInActions && exportBlocked === null) && (
+      {!exportInActions && (
         <button type="button" onClick={onExport} disabled={exportBlocked !== null} aria-describedby={exportBlocked ? "transfer-blocked" : undefined}>
           今のデータを書き出す
         </button>

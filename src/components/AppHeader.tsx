@@ -11,8 +11,8 @@ import type { PersistenceStatus } from "../domain/persistence";
 
 /** 保存の保護の状態の表示（IMP-07）。状態だけを示し、指示は出さない（CLAUDE.md 4.3・12.2） */
 const PERSISTENCE_LABELS: Record<PersistenceStatus, string> = {
-  persisted: "有効",
-  "not-persisted": "無効（空き容量が少ないとき、ブラウザが消すことがあります）",
+  persisted: "あり",
+  "not-persisted": "なし（空き容量が少ないとき、ブラウザがこのアプリのデータを消すことがあります）",
   unsupported: "このブラウザでは使えません",
 };
 

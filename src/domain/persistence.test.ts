@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FakeStorage } from "./fakeStorage";
 import {
   backupFileName,
@@ -20,6 +20,7 @@ import {
   storageUsage,
   writeItem,
   requestPersistence,
+  getStorageManager,
 } from "./persistence";
 import { fullState, sampleState } from "./testData";
 import { emptyDeviceMeta, markExported } from "./transfer";
@@ -234,23 +235,23 @@ describe("保存の保護（IMP-07。requestPersistence）", () => {
     expect(await requestPersistence({ persisted: async () => false })).toBe("unsupported");
   });
 
-  it("[@security] すでに保護されていれば、求めない（persist を呼ばない）", async () => {
+  it("すでに保護されていれば、求めない（persist を呼ばない）", async () => {
     const { m, calls } = manager(async () => true, async () => true);
     expect(await requestPersistence(m)).toBe("persisted");
-    expect(calls.persist).toBe(0);
+    expect(calls).toEqual({ persisted: 1, persist: 0 });
   });
 
   it("保護されていなければ1回だけ求め、その結果を返す", async () => {
     const yes = manager(async () => false, async () => true);
     expect(await requestPersistence(yes.m)).toBe("persisted");
-    expect(yes.calls.persist).toBe(1);
+    expect(yes.calls).toEqual({ persisted: 1, persist: 1 });
     const no = manager(async () => false, async () => false);
     expect(await requestPersistence(no.m)).toBe("not-persisted");
   });
 
-  it("[@security] 拒否（reject）や例外のときは unsupported（起動を止めない）", async () => {
+  it("[@security] 状態を読むときの拒否（reject）や例外は unsupported、求めるときの拒否は not-persisted（どちらも起動を止めない）", async () => {
     expect(await requestPersistence(manager(() => Promise.reject(new Error("x")), async () => true).m)).toBe("unsupported");
-    expect(await requestPersistence(manager(async () => false, () => Promise.reject(new Error("x"))).m)).toBe("unsupported");
+    expect(await requestPersistence(manager(async () => false, () => Promise.reject(new Error("x"))).m)).toBe("not-persisted");
     expect(
       await requestPersistence({
         persisted: () => {
@@ -259,5 +260,34 @@ describe("保存の保護（IMP-07。requestPersistence）", () => {
         persist: async () => true,
       }),
     ).toBe("unsupported");
+  });
+});
+
+describe("保存の保護の入口（IMP-07。getStorageManager）", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("navigator が無い、navigator.storage が無い、取り出しで例外のときは null", () => {
+    vi.stubGlobal("navigator", undefined);
+    expect(getStorageManager()).toBeNull();
+    vi.stubGlobal("navigator", {});
+    expect(getStorageManager()).toBeNull();
+    vi.stubGlobal("navigator", {
+      get storage() {
+        throw new Error("x");
+      },
+    });
+    expect(getStorageManager()).toBeNull();
+  });
+
+  it("[@security] persisted・persist の2つだけを包んで返す（estimate・getDirectory などは外に出さない）", async () => {
+    const real = { persisted: async () => true, persist: async () => true, estimate: async () => ({}), getDirectory: async () => ({}) };
+    vi.stubGlobal("navigator", { storage: real });
+    const m = getStorageManager();
+    expect(m).not.toBeNull();
+    expect(Object.keys(m ?? {}).sort()).toEqual(["persist", "persisted"]);
+    expect(m).not.toBe(real);
+    expect(await requestPersistence()).toBe("persisted");
   });
 });

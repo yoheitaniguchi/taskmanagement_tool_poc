@@ -8,8 +8,10 @@ import globals from "globals";
 
 // 保存の API。src/domain/persistence.ts だけに許す（CLAUDE.md 8.2）。
 // storage は navigator.storage（保存の保護。IMP-07）。cookie・cookieStore・caches は、同じオリジンで共有される保存（使っていないが、使わないことをコードで守る。CLAUDE.md 12.6）。
-// プロパティの名前だけで禁じるので、window.navigator.storage や const { storage } = navigator も止まる
-const STORAGE_APIS = ["localStorage", "sessionStorage", "indexedDB", "storage", "cookie", "cookieStore", "caches"];
+// storageBuckets（独自の保護・indexedDB・caches を持つ）と openDatabase（WebSQL）も、同じ理由で禁じる。
+// プロパティの名前だけで禁じるので、window.navigator.storage や const { storage } = navigator も止まる。
+// 変数をキーにした参照（obj[k]）や Reflect.get は止まらない。わざと避けないと書かない形なので、レビューで守る（docs/design.md 6.1）
+const STORAGE_APIS = ["localStorage", "sessionStorage", "indexedDB", "storage", "storageBuckets", "openDatabase", "cookie", "cookieStore", "caches"];
 // 外部への通信の API（CSP の connect-src 'none' と二重に止める）
 const NETWORK_APIS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource"];
 
@@ -32,7 +34,7 @@ export default tseslint.config(
     ignores: ["dist", "coverage", "test-results"],
   },
   {
-    files: ["**/*.{ts,tsx,js}"],
+    files: ["**/*.{ts,tsx,js,jsx,mjs,cjs}"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 2022,
@@ -67,7 +69,7 @@ export default tseslint.config(
   },
   {
     // 設定ファイルとテストは Node.js で動く
-    files: ["*.{ts,js}", "scripts/**/*.{ts,js}", "security/**/*.ts", "src/**/*.test.ts"],
+    files: ["*.{ts,js,mjs,cjs}", "scripts/**/*.{ts,js,mjs,cjs}", "security/**/*.ts", "src/**/*.test.ts"],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
 );

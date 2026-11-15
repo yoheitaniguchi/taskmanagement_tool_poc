@@ -6,7 +6,7 @@ import { UnreadableWarning } from "./UnreadableWarning";
 
 interface Props {
   changed: boolean;
-  onExportCurrent: () => string | null;
+  onExportCurrent: () => { at: string } | null;
   exportBlocked: string | null;
   /** 読めなかった保存データを書き出す（残っていなければ null） */
   onExportUnreadable: (() => void) | null;
@@ -23,7 +23,7 @@ export function ClearDialog({ changed, onExportCurrent, exportBlocked, onExportU
         <strong>元に戻せません。</strong>書き出したJSONファイルは消えません。
       </p>
       {onExportUnreadable && <UnreadableWarning purpose="clear" onExport={onExportUnreadable} />}
-      <TransferWarning changed={changed} exportedAt={exportedAt} exportBlocked={exportBlocked} onExport={() => setExportedAt(onExportCurrent())} />
+      <TransferWarning changed={changed} exportedAt={exportedAt} exportBlocked={exportBlocked} onExport={() => setExportedAt(onExportCurrent()?.at ?? null)} />
       <div className="modal__actions">
         <button type="button" data-autofocus onClick={onClose}>
           やめる
