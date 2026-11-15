@@ -10,6 +10,7 @@ import { currentQuarter, quarterLabel, toLocalDate } from "../domain/fiscal";
 import { THEMES, isThemeId, type ThemeId } from "../domain/themes";
 import type { InboxItem, Placement, Project, Quarter } from "../domain/types";
 import { FieldMark } from "../components/FieldMark";
+import { ThemeChoice } from "../components/ThemeChoice";
 import { formatDateTime } from "../labels";
 import { clarifyHref, routeHref, type ClarifyStep } from "../route";
 import { backThenReplace, pushHash } from "../state/navigate";
@@ -429,18 +430,8 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 {!isProject && d.choice === "next" && d.projectId === "" && (
                   <>
                     {/* 単独の次の一手のテーマは、プロジェクトのテーマと同じボタンの並びで1回押して決める（R-2。振り返り 7.2 の A）。
-                        任意なので「なし」を初めに置く。次のアクションの編集の形と移動の画面はプルダウンのまま（振り返り 確認事項 5、計画 1.2） */}
-                    <fieldset className="clarify__themes">
-                      <legend>
-                        テーマ <FieldMark required={false} />
-                      </legend>
-                      {[{ id: "", label: "なし" }, ...THEMES].map((t) => (
-                        <label key={t.id} className="chip">
-                          <input type="radio" name="clarify-standalone-theme" checked={d.standaloneTheme === t.id} onChange={() => update({ standaloneTheme: t.id })} />
-                          {t.label}
-                        </label>
-                      ))}
-                    </fieldset>
+                        次のアクションの編集の形と移動の画面も同じ部品にそろえる（計画 1.2、2026-11-15 発注者） */}
+                    <ThemeChoice name="clarify-standalone-theme" value={d.standaloneTheme} onChange={(id) => update({ standaloneTheme: id })} />
                   </>
                 )}
                 {errorBox}

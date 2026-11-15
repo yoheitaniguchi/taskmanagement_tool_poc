@@ -10,6 +10,7 @@ import { FieldMark } from "./FieldMark";
 import { Field } from "./Field";
 import { Modal } from "./Modal";
 import { PlacementPicker } from "./ProjectForm";
+import { ThemeChoice } from "./ThemeChoice";
 
 interface Props {
   state: AppState;
@@ -114,21 +115,8 @@ export function MoveDialog({ state, source, text: initialText, themeId: sourceTh
                 </div>
               </>
             )}
-            {standaloneTheme && (
-              <div className="item-edit__field">
-                <label htmlFor="move-action-theme">
-                  テーマ <FieldMark required={false} />
-                </label>
-                <select id="move-action-theme" value={theme} onChange={(e) => setTheme(e.target.value)}>
-                  <option value="">なし</option>
-                  {THEMES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            {/* 単独の次のアクションのテーマは、明確化・編集の形と同じボタンの並び（計画 1.2、2026-11-15 発注者） */}
+            {standaloneTheme && <ThemeChoice name="move-standalone-theme" value={theme} onChange={setTheme} />}
             {target === "action" && source.kind === "project" && sourceTheme !== null && <p className="hint">テーマ「{themeLabel(sourceTheme)}」を引き継ぎます。</p>}
             {appended !== null && <p className="hint">{appended}。</p>}
             <p className="hint">{dropped.length === 0 ? "引き継がれないものはありません。" : `次のものは引き継がれません：${dropped.join("、")}`}</p>
