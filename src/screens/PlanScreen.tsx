@@ -8,7 +8,8 @@ import { YearSwitcher } from "../components/YearSwitcher";
 import { currentQuarter, quarterLabel, quarterMonths } from "../domain/fiscal";
 import { FOCUS_MAX, PLAN_FIELDS } from "../domain/plan";
 import { placedProjectsByTheme, quarterOverview, type QuarterOverview } from "../domain/summaries";
-import { THEMES, themeLabel, type ThemeId } from "../domain/themes";
+import { THEMES, type ThemeId } from "../domain/themes";
+import { ThemeLabel } from "../components/ThemeLabel";
 import type { AppState, Placement, Project, Quarter } from "../domain/types";
 import { routeHref } from "../route";
 
@@ -271,7 +272,7 @@ function QuarterSheetCard({
             <li key={p.id}>
               <a href={routeHref("projects", p.id)}>{p.name}</a>
               <span className="plan-sheet__meta">
-                {themeLabel(p.themeId)}・{p.status === "done" ? "✓完了" : "進行中"}
+                <ThemeLabel id={p.themeId} /> {p.status === "done" ? "✓完了" : "進行中"}
               </span>
               <button type="button" className="link-button" aria-label={`「${p.name}」をこの四半期から外す`} disabled={blocked !== null} onClick={() => setError(handlers.onPlaceProject(p.id, null))}>
                 外す

@@ -1,0 +1,933 @@
+{
+  "app": "taskmanagement_tool_poc",
+  "exportedAt": "2026-11-15T00:00:00.000Z",
+  "deviceName": "架空の端末",
+  "state": {
+    "schemaVersion": 1,
+    "inbox": [
+      {
+        "id": "00000000-0000-4000-8000-000000001001",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "text": "架空の収集箱の項目1",
+        "capturedAt": "2026-11-10T00:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001002",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "text": "架空の収集箱の項目2",
+        "capturedAt": "2026-11-10T00:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001003",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "text": "架空の収集箱の項目3",
+        "capturedAt": "2026-11-10T00:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001004",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "text": "架空の収集箱の項目4",
+        "capturedAt": "2026-11-10T00:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001005",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "text": "架空の収集箱の項目5",
+        "capturedAt": "2026-11-10T00:00:00.000Z"
+      }
+    ],
+    "actions": [
+      {
+        "id": "00000000-0000-4000-8000-000000000528",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "text": "架空の次のアクション",
+        "projectId": "00000000-0000-4000-8000-000000000501",
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001006",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の仕事Aの次のアクション2",
+        "projectId": "00000000-0000-4000-8000-000000000501",
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001007",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の仕事Aの次のアクション3",
+        "projectId": "00000000-0000-4000-8000-000000000501",
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001008",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション1（文言が長めで、スマホの幅では2行に折り返すもの）",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001009",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション2",
+        "projectId": null,
+        "themeId": "startup",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001010",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション3",
+        "projectId": null,
+        "themeId": "health",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001011",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション4",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001012",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション5",
+        "projectId": null,
+        "themeId": "finance",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001013",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション6（文言が長めで、スマホの幅では2行に折り返すもの）",
+        "projectId": null,
+        "themeId": "hobby_learning",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001014",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション7",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001015",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション8",
+        "projectId": null,
+        "themeId": "work",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001016",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション9",
+        "projectId": null,
+        "themeId": "startup",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001017",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション10",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001018",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション11（文言が長めで、スマホの幅では2行に折り返すもの）",
+        "projectId": null,
+        "themeId": "relationships",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001019",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション12",
+        "projectId": null,
+        "themeId": "finance",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001020",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション13",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001021",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション14",
+        "projectId": null,
+        "themeId": "other",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001022",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション15",
+        "projectId": null,
+        "themeId": "work",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001023",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション16（文言が長めで、スマホの幅では2行に折り返すもの）",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001024",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション17",
+        "projectId": null,
+        "themeId": "health",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001025",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション18",
+        "projectId": null,
+        "themeId": "relationships",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001026",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション19",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001027",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション20",
+        "projectId": null,
+        "themeId": "hobby_learning",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001028",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション21（文言が長めで、スマホの幅では2行に折り返すもの）",
+        "projectId": null,
+        "themeId": "other",
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001029",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の単独の次のアクション22",
+        "projectId": null,
+        "themeId": null,
+        "status": "todo",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001030",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の完了したアクション1",
+        "projectId": null,
+        "themeId": null,
+        "status": "done",
+        "completedAt": "2026-11-10T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001031",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の完了したアクション2",
+        "projectId": null,
+        "themeId": null,
+        "status": "done",
+        "completedAt": "2026-11-10T00:00:00.000Z",
+        "note": ""
+      }
+    ],
+    "waitingFors": [
+      {
+        "id": "00000000-0000-4000-8000-000000001032",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の連絡待ち1",
+        "party": "架空の相手",
+        "requestedOn": "2026-11-10",
+        "projectId": "00000000-0000-4000-8000-000000000502",
+        "status": "waiting",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001033",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の連絡待ち2",
+        "party": "架空の相手",
+        "requestedOn": "2026-11-10",
+        "projectId": null,
+        "status": "waiting",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001034",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空の連絡待ち3",
+        "party": "架空の相手",
+        "requestedOn": "2026-11-10",
+        "projectId": null,
+        "status": "waiting",
+        "completedAt": null,
+        "note": ""
+      }
+    ],
+    "projects": [
+      {
+        "id": "00000000-0000-4000-8000-000000000501",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事A",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000502",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事B：名称が長くて、カードの中で2行に折り返すかどうかを確かめるためのもの",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000503",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事C",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000504",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事D",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000505",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事E（完了）",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000506",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事F",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000507",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の仕事G",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000508",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の起業の準備",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "startup",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 2
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000509",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の起業の検証",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "startup",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000510",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の健康の習慣",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000511",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の健康診断",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000512",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の家計の見直し",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "finance",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000513",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の趣味の講座",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 1
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000514",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の学びの読書会",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 3
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000515",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の右端の列の長い名称のプロジェクト（メニューがはみ出さないかを確かめる）",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": {
+          "fiscalYear": 2026,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000516",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の小さな片付け",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000517",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の家具の買い替え",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "finance",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000518",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の連絡の整理",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "relationships",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000519",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の道具の手入れ",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "hobby_learning",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000520",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の資料の整理",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": null,
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000521",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-15T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の置かずに終えたもの",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "other",
+        "placement": null,
+        "status": "done",
+        "completedAt": "2026-10-15T00:00:00.000Z",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000522",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の前年度からの続き",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2025,
+          "quarter": 4
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000523",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の前年度の健康",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "health",
+        "placement": {
+          "fiscalYear": 2025,
+          "quarter": 2
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000524",
+        "createdAt": "2026-10-01T00:00:00.000Z",
+        "updatedAt": "2026-10-01T00:00:00.000Z",
+        "capturedAt": null,
+        "movedAt": null,
+        "name": "架空の次の年度の仕事",
+        "outcome": "架空の成果（確かめるためのデータ）",
+        "themeId": "work",
+        "placement": {
+          "fiscalYear": 2027,
+          "quarter": 1
+        },
+        "status": "active",
+        "completedAt": null,
+        "note": ""
+      }
+    ],
+    "someday": [
+      {
+        "id": "00000000-0000-4000-8000-000000001035",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空のいつか・多分1",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001036",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空のいつか・多分2",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001037",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空のいつか・多分3",
+        "note": ""
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001038",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "text": "架空のいつか・多分4",
+        "note": ""
+      }
+    ],
+    "references": [
+      {
+        "id": "00000000-0000-4000-8000-000000001039",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "title": "架空の資料1",
+        "body": "架空の本文"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001040",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "title": "架空の資料2",
+        "body": "架空の本文"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001041",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "capturedAt": "2026-11-10T00:00:00.000Z",
+        "movedAt": null,
+        "title": "架空の資料3",
+        "body": "架空の本文"
+      }
+    ],
+    "annualGoals": [
+      {
+        "id": "00000000-0000-4000-8000-000000001042",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "themeId": "work",
+        "text": "架空の到達状態"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000001043",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "themeId": "health",
+        "text": "架空の到達状態"
+      }
+    ],
+    "quarterSheets": [
+      {
+        "id": "00000000-0000-4000-8000-000000001044",
+        "createdAt": "2026-11-10T00:00:00.000Z",
+        "updatedAt": "2026-11-10T00:00:00.000Z",
+        "fiscalYear": 2026,
+        "quarter": 3,
+        "focusThemeIds": [
+          "work",
+          "health"
+        ],
+        "wontDo": ""
+      }
+    ]
+  }
+}

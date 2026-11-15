@@ -5,12 +5,13 @@ import { useState, type ReactNode } from "react";
 import { FIELDS } from "../domain/fields";
 import type { CompletableKind, ItemEdit, ItemRef } from "../domain/items";
 import type { MoveInput, MoveRef, PlaceKind } from "../domain/move";
-import { THEMES, isThemeId, themeLabel } from "../domain/themes";
+import { THEMES, isThemeId } from "../domain/themes";
 import type { Action, AppState, Project, ReferenceItem, SomedayItem, WaitingFor } from "../domain/types";
 import { formatDate } from "../labels";
 import { FieldMark } from "./FieldMark";
 import { Field, useFieldId } from "./Field";
 import { MoveDialog } from "./MoveDialog";
+import { ThemeLabel } from "./ThemeLabel";
 import { routeHref } from "../route";
 
 export interface ItemHandlers {
@@ -64,27 +65,33 @@ function useRowState() {
 
 function CompleteBox({ kind, item, ctx, setError }: { kind: CompletableKind; item: Action | WaitingFor; ctx: RowContext; setError: (e: string | null) => void }) {
   const done = item.status === "done";
+  // label は押せる範囲を広げるための枠（スマホで44px角。index.css）。名前は input の aria-label で付ける
   return (
-    <input
-      type="checkbox"
-      className="item-row__check"
-      checked={done}
-      disabled={ctx.disabledReason !== null}
-      aria-label={done ? `「${item.text}」の完了を取り消す` : `「${item.text}」を完了にする`}
-      onChange={() => {
-        const ref = { kind, id: item.id };
-        const error = done ? ctx.onUncomplete(ref) : ctx.onComplete(ref);
-        setError(error);
-        if (error === null && !done) focusHeading();
-      }}
-    />
+    <label className="item-row__check">
+      <input
+        type="checkbox"
+        checked={done}
+        disabled={ctx.disabledReason !== null}
+        aria-label={done ? `「${item.text}」の完了を取り消す` : `「${item.text}」を完了にする`}
+        onChange={() => {
+          const ref = { kind, id: item.id };
+          const error = done ? ctx.onUncomplete(ref) : ctx.onComplete(ref);
+          setError(error);
+          if (error === null && !done) focusHeading();
+        }}
+      />
+    </label>
   );
 }
 
 function ProjectLink({ projectId, ctx }: { projectId: string | null; ctx: RowContext }) {
   if (projectId === null || !ctx.showProject) return null;
   const p = ctx.projects.find((x) => x.id === projectId);
-  return p ? <a href={routeHref("projects", p.id)}>{p.name}</a> : null;
+  return p ? (
+    <a className="row-link" href={routeHref("projects", p.id)}>
+      {p.name}
+    </a>
+  ) : null;
 }
 
 function DoneMark({ item, now }: { item: { status: string; completedAt: string | null }; now: Date }) {
@@ -151,7 +158,7 @@ function ActionRow({ item, ctx }: { item: Action; ctx: RowContext }) {
       text={item.text}
       meta={[
         <ProjectLink key="p" projectId={item.projectId} ctx={ctx} />,
-        item.projectId === null && item.themeId !== null ? themeLabel(item.themeId) : null,
+        item.projectId === null && item.themeId !== null ? <ThemeLabel key="t" id={item.themeId} /> : null,
         captured(item, ctx.now),
         <DoneMark key="d" item={item} now={ctx.now} />,
       ]}
