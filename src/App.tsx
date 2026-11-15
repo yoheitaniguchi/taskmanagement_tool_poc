@@ -344,6 +344,7 @@ export default function App() {
         exportBlocked={store.exportBlocked}
         hasBackup={hasBackup}
         usage={store.storageUsage}
+        persistence={store.persistence}
         onExport={() => void exportNow()}
         onImport={() => setDialog("import")}
         onExportBackup={exportBackup}

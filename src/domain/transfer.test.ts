@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changedSinceTransfer, emptyDeviceMeta, isValidDeviceName, markChanged, markExported, markImported, stateFingerprint, validateDeviceMeta, validateDeviceName } from "./transfer";
+import { changedSinceTransfer, emptyDeviceMeta, importActions, isValidDeviceName, markChanged, markExported, markImported, stateFingerprint, validateDeviceMeta, validateDeviceName } from "./transfer";
 import { emptyState } from "./types";
 import { sampleState } from "./testData";
 
@@ -92,5 +92,31 @@ describe("[@security] ブラウザの設定の検証（docs/design.md 6.1）", (
       { ...good, lastImport: { ...good.lastImport, extra: 1 } },
     ];
     for (const v of bad) expect(validateDeviceMeta(v)).toEqual(emptyDeviceMeta());
+  });
+});
+
+describe("読み込みの確認画面のボタン（IMP-08。importActions）", () => {
+  const AT = "2026-11-15T06:00:00.000Z";
+
+  it("[@security] 変更があり、書き出せて、まだ書き出していないときは、書き出しを主ボタンにし、置き換えは「書き出さずに置き換える」にする", () => {
+    expect(importActions(true, null, null)).toEqual({ exportFirst: true, replaceLabel: "書き出さずに置き換える" });
+  });
+
+  it("[@security] 書き出した後は、［置き換える］だけにする（2段目）", () => {
+    expect(importActions(true, null, AT)).toEqual({ exportFirst: false, replaceLabel: "置き換える" });
+  });
+
+  it("変更が無いときは、今のまま［置き換える］だけ", () => {
+    expect(importActions(false, null, null)).toEqual({ exportFirst: false, replaceLabel: "置き換える" });
+  });
+
+  it("[@security] 書き出せないとき（端末名が無い、読み取り専用）は、書き出しのボタンを出さず［置き換える］だけ（理由は別に出す）", () => {
+    for (const reason of ["書き出すには、先に ⋯ の［このブラウザの名前を変える］で名前を付けてください", "このタブは読み取り専用です"]) {
+      expect(importActions(true, reason, null)).toEqual({ exportFirst: false, replaceLabel: "置き換える" });
+    }
+  });
+
+  it("起動時に保存データを読めなかったとき（変更なし・書き出せない）は、今のまま［置き換える］だけ", () => {
+    expect(importActions(false, "保存データを読めませんでした", null)).toEqual({ exportFirst: false, replaceLabel: "置き換える" });
   });
 });

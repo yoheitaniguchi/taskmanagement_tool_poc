@@ -1,9 +1,9 @@
 // JSON の読み込み（docs/design.md 6.2）。ファイルを検証してから、読み込むファイルとこのブラウザを並べて見せる。
 // 読み込みは置き換えで取り消せないので、確認を出し、置き換える前に今のデータを書き出せるようにする（CLAUDE.md 8.2・8.5）
 import { useRef, useState } from "react";
-import { parseExportText, tooLargeMessage } from "../domain/persistence";
+import { exportFileName, parseExportText, tooLargeMessage } from "../domain/persistence";
 import { COUNT_LABELS, counts, type Counts } from "../domain/summaries";
-import type { DeviceMeta } from "../domain/transfer";
+import { importActions, type DeviceMeta } from "../domain/transfer";
 import type { AppState, ExportFile } from "../domain/types";
 import { LIMITS } from "../domain/validate";
 import { formatDateTime } from "../labels";
@@ -34,6 +34,9 @@ export function ImportDialog({ current, meta, changed, onExportCurrent, exportBl
   // 読み込みの途中で別のファイルを選んだとき、古い結果で上書きしないための番号
   const selection = useRef(0);
   const now = new Date();
+  // 書き出しと置き換えを2段に分ける（IMP-08）。ボタンの決め方は src/domain/transfer.ts の importActions
+  const actions = importActions(changed, exportBlocked, exportedAt);
+  const exportCurrent = () => setExportedAt(onExportCurrent());
 
   const onFile = async (file: File | undefined) => {
     const mine = ++selection.current;
@@ -120,8 +123,15 @@ export function ImportDialog({ current, meta, changed, onExportCurrent, exportBl
             changed={changed}
             exportedAt={exportedAt}
             exportBlocked={exportBlocked}
-            onExport={() => setExportedAt(onExportCurrent())}
+            onExport={exportCurrent}
+            exportInActions
+            exportedFileName={exportedAt !== null && meta.deviceName !== null ? exportFileName(meta.deviceName, new Date(exportedAt)) : null}
           />
+          {actions.exportFirst && (
+            <p className="hint">
+              書き出したら、ダウンロードが終わったことを確かめてから［置き換える］を押してください。書き出しが保存し終えたかは、このアプリからは分かりません。
+            </p>
+          )}
         </>
       )}
       {failed && (
@@ -143,8 +153,13 @@ export function ImportDialog({ current, meta, changed, onExportCurrent, exportBl
             else setFailed(true);
           }}
         >
-          置き換える
+          {loaded === null ? "置き換える" : actions.replaceLabel}
         </button>
+        {loaded !== null && actions.exportFirst && (
+          <button type="button" className="button--primary" onClick={exportCurrent}>
+            今のデータを書き出す
+          </button>
+        )}
       </div>
     </Modal>
   );

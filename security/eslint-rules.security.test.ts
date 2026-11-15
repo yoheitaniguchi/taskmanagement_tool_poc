@@ -46,6 +46,12 @@ describe("[@security] ESLint による禁止", () => {
     ["window.localStorage", 'export const r = () => window.localStorage.getItem("k");'],
     ["sessionStorage", 'export const r = () => sessionStorage.getItem("k");'],
     ["indexedDB", 'export const r = () => indexedDB.open("k");'],
+    ["navigator.storage", "export const r = () => navigator.storage.persist();"],
+    ["window.navigator.storage", "export const r = () => window.navigator.storage.persisted();"],
+    ["const { storage } = navigator", "export const r = () => { const { storage } = navigator; return storage; };"],
+    ["document.cookie", "export const r = () => document.cookie;"],
+    ["cookieStore", 'export const r = () => cookieStore.get("k");'],
+    ["caches", 'export const r = () => caches.open("k");'],
   ];
   for (const [label, code] of storageCode) {
     it(`[@security] ${label} は、persistence.ts の外ではエラーになる`, async () => {
@@ -56,5 +62,9 @@ describe("[@security] ESLint による禁止", () => {
 
   it("[@security] persistence.ts では localStorage を使える", async () => {
     expect(await ruleIds('export const r = () => window.localStorage.getItem("k");', PERSISTENCE_FILE)).toEqual([]);
+  });
+
+  it("[@security] persistence.ts では navigator.storage を使える（保存の保護。IMP-07）", async () => {
+    expect(await ruleIds("export const r = () => navigator.storage.persist();", PERSISTENCE_FILE)).toEqual([]);
   });
 });

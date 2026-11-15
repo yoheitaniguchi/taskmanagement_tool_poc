@@ -145,3 +145,22 @@ export function markImported(meta: DeviceMeta, file: Pick<ExportFile, "deviceNam
 export function markChanged(meta: DeviceMeta, now: Date): DeviceMeta {
   return { ...meta, lastChangedAt: now.toISOString() };
 }
+
+/** JSON の読み込みの確認画面に出す操作（IMP-08。docs/design.md 6.2、計画 2.5） */
+export interface ImportActions {
+  /** 置き換える前に、今のデータを書き出すボタンを主ボタンとして出すか */
+  exportFirst: boolean;
+  /** 置き換えるボタンの文言。書き出すボタンと並ぶときは、書き出さないことを文言で示す */
+  replaceLabel: "置き換える" | "書き出さずに置き換える";
+}
+
+/**
+ * 読み込みの確認画面のボタンを決める。書き出しと置き換えは2段に分け、書き出した後に置き換える
+ * （ダウンロードが保存し終えたかはアプリから分からないので、利用者がダウンロードの知らせを見てから置き換えられるように）。
+ * - 最後に書き出した後の変更があり、書き出せて、まだ書き出していない：［今のデータを書き出す］（主）と［書き出さずに置き換える］
+ * - それ以外（変更が無い、書き出せない（端末名が無い・読み取り専用・読めなかった保存データがある）、書き出した後）：［置き換える］だけ
+ */
+export function importActions(changed: boolean, exportBlocked: string | null, exportedAt: string | null): ImportActions {
+  const exportFirst = changed && exportBlocked === null && exportedAt === null;
+  return { exportFirst, replaceLabel: exportFirst ? "書き出さずに置き換える" : "置き換える" };
+}

@@ -19,6 +19,7 @@ import {
   storageNamespace,
   storageUsage,
   writeItem,
+  requestPersistence,
 } from "./persistence";
 import { fullState, sampleState } from "./testData";
 import { emptyDeviceMeta, markExported } from "./transfer";
@@ -208,5 +209,55 @@ describe("書き出しと読み込み（docs/design.md 6.2）", () => {
   it("[@security] 未来の版のファイルを拒否する", () => {
     const text = serializeExport({ ...sampleState(), schemaVersion: (SCHEMA_VERSION + 1) as typeof SCHEMA_VERSION }, "PC", now);
     expect(parseExportText(text)).toEqual({ ok: false, errors: ["このアプリより新しい版のデータです。アプリを更新してから読み込んでください"] });
+  });
+});
+
+describe("保存の保護（IMP-07。requestPersistence）", () => {
+  /** 偽物の navigator.storage。呼ばれた回数を数える */
+  function manager(persisted: () => Promise<boolean>, persist: () => Promise<boolean>) {
+    const calls = { persisted: 0, persist: 0 };
+    return {
+      calls,
+      m: {
+        persisted: () => (calls.persisted++, persisted()),
+        persist: () => (calls.persist++, persist()),
+      },
+    };
+  }
+
+  it("navigator.storage が無いときは unsupported", async () => {
+    expect(await requestPersistence(null)).toBe("unsupported");
+  });
+
+  it("persist・persisted が無いときは unsupported", async () => {
+    expect(await requestPersistence({})).toBe("unsupported");
+    expect(await requestPersistence({ persisted: async () => false })).toBe("unsupported");
+  });
+
+  it("[@security] すでに保護されていれば、求めない（persist を呼ばない）", async () => {
+    const { m, calls } = manager(async () => true, async () => true);
+    expect(await requestPersistence(m)).toBe("persisted");
+    expect(calls.persist).toBe(0);
+  });
+
+  it("保護されていなければ1回だけ求め、その結果を返す", async () => {
+    const yes = manager(async () => false, async () => true);
+    expect(await requestPersistence(yes.m)).toBe("persisted");
+    expect(yes.calls.persist).toBe(1);
+    const no = manager(async () => false, async () => false);
+    expect(await requestPersistence(no.m)).toBe("not-persisted");
+  });
+
+  it("[@security] 拒否（reject）や例外のときは unsupported（起動を止めない）", async () => {
+    expect(await requestPersistence(manager(() => Promise.reject(new Error("x")), async () => true).m)).toBe("unsupported");
+    expect(await requestPersistence(manager(async () => false, () => Promise.reject(new Error("x"))).m)).toBe("unsupported");
+    expect(
+      await requestPersistence({
+        persisted: () => {
+          throw new Error("x");
+        },
+        persist: async () => true,
+      }),
+    ).toBe("unsupported");
   });
 });

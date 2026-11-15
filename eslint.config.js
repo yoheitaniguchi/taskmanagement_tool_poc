@@ -6,8 +6,10 @@ import globals from "globals";
 // アプリが外部と通信しないこと・入力を HTML として挿入しないこと・保存の入口を1か所にすることを、構文の制限で守る
 // （CLAUDE.md 8.2・8.3、docs/security/checklist.md B・C・E。プラグインを足さずに済むよう、ESLint の標準のルールで書く）
 
-// 保存の API。src/domain/persistence.ts だけに許す（CLAUDE.md 8.2）
-const STORAGE_APIS = ["localStorage", "sessionStorage", "indexedDB"];
+// 保存の API。src/domain/persistence.ts だけに許す（CLAUDE.md 8.2）。
+// storage は navigator.storage（保存の保護。IMP-07）。cookie・cookieStore・caches は、同じオリジンで共有される保存（使っていないが、使わないことをコードで守る。CLAUDE.md 12.6）。
+// プロパティの名前だけで禁じるので、window.navigator.storage や const { storage } = navigator も止まる
+const STORAGE_APIS = ["localStorage", "sessionStorage", "indexedDB", "storage", "cookie", "cookieStore", "caches"];
 // 外部への通信の API（CSP の connect-src 'none' と二重に止める）
 const NETWORK_APIS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource"];
 
