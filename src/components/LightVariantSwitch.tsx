@@ -6,9 +6,9 @@ import { PREVIEW_PR } from "../buildInfo";
 
 export const LIGHT_VARIANTS = [
   { id: "", label: "今の色" },
-  { id: "a", label: "A 少し下げる" },
-  { id: "b", label: "B 中くらい" },
-  { id: "c", label: "C しっかり下げる" },
+  { id: "a", label: "A 少し暗く" },
+  { id: "b", label: "B やや暗く" },
+  { id: "c", label: "C いちばん暗く" },
 ] as const;
 
 export type LightVariant = (typeof LIGHT_VARIANTS)[number]["id"];
@@ -24,7 +24,7 @@ export function LightVariantSwitch({ previewPr = PREVIEW_PR }: { previewPr?: num
   if (previewPr === null) return null;
   return (
     <fieldset className="light-variant">
-      <legend>ライトモードの案（ライトのときだけ変わります。C より暗くはできません）</legend>
+      <legend>ライトモードの案（ライトのときだけ変わります。［⋯］の「表示」でライトにすると比べられます。C がいちばん暗い案です（これより暗いと文字が読みにくくなるため））</legend>
       {LIGHT_VARIANTS.map((v) => (
         <label key={v.id} className="chip">
           <input

@@ -2,7 +2,6 @@
 // 状態の表示だけを置き、結論・指示（「〜しましょう」「滞留しています」など）は出さない（CLAUDE.md 4.3）。
 import { quarterLabel } from "../domain/fiscal";
 import type { Counts, ProjectSummary, QuarterOverview } from "../domain/summaries";
-import { themeLabel } from "../domain/themes";
 import { ThemeLabel } from "../components/ThemeLabel";
 import { clarifyHref, routeHref, type ScreenId } from "../route";
 
@@ -52,7 +51,17 @@ export function HomeScreen({ counts, projects, quarter, showIntro, onDismissIntr
       <section aria-labelledby="home-quarter">
         <h2 id="home-quarter">今の四半期</h2>
         <p>{quarterLabel(quarter.fiscalYear, quarter.quarter)}</p>
-        <p>重点テーマ：{quarter.focusThemeIds.length === 0 ? "未設定" : quarter.focusThemeIds.map(themeLabel).join("・")}</p>
+        <p>
+          重点テーマ：
+          {quarter.focusThemeIds.length === 0
+            ? "未設定"
+            : quarter.focusThemeIds.map((id, i) => (
+                <span key={id}>
+                  {i > 0 && " "}
+                  <ThemeLabel id={id} />
+                </span>
+              ))}
+        </p>
         <p>
           主要プロジェクト <strong>{quarter.projects.length}</strong>件（うち完了 {quarter.doneCount}件）
         </p>

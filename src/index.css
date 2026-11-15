@@ -153,7 +153,8 @@ a {
 }
 
 /* 行・カード・表の中の名称のリンクは、下線を出さず文字の色にする（IMP-09。情報の多い画面で線が重ならないように）。
-   押せることは、カードの枠・表の行の位置と、ホバー・キーボードのフォーカスのときの下線で分かる。文中のリンクは下線のまま */
+   押せることは、カードの枠・表の行の位置と、ホバー・キーボードのフォーカスのときの下線で分かる。文中のリンクは下線のまま。
+   カードの枠・表の位置の手がかりが無い一覧の行の付記と、年次目標の表の「第N四半期：名称」は、目立たない下線を残す（スマホにはホバーが無いため） */
 .row-link,
 .roadmap-card__name,
 .project-table__name a,
@@ -163,7 +164,14 @@ a {
   text-decoration: none;
 }
 
-.row-link {
+.row-link,
+.plan-placed a {
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.project-table__row--done .project-table__name a {
   color: inherit;
 }
 
@@ -178,14 +186,16 @@ a {
 .plan-sheet__projects a:hover,
 .plan-sheet__projects a:focus-visible {
   text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
-/* テーマ名の小さなラベル（IMP-12）。色は足さず、既存の線と面のトークンだけで形を揃える */
+/* テーマ名の小さなラベル（IMP-12）。色は足さず、既存の線と面のトークンだけで形を揃える。
+   押して選ぶチップ（.chip。丸い端）と見分けられるよう、角は小さくする */
 .theme-label {
   display: inline-block;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
   background: var(--surface-2);
   color: var(--text);
   font-size: 0.8rem;
@@ -555,7 +565,8 @@ a.button {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 6px 0 0;
+  max-width: 1120px;
+  margin: 6px auto 0;
   padding: 0;
   border: none;
 }
@@ -1494,6 +1505,10 @@ body:has(.undo-bar) .app {
 .item-row__check {
   flex: none;
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .item-row__text {
@@ -1707,10 +1722,17 @@ body:has(.undo-bar) .app {
 }
 
 @media (max-width: 720px) {
-  /* Android の幅で1画面に見える件数を増やす（IMP-11）。押せる部分は下の min-height で保つ */
-  .item-row {
+  /* Android の幅で1画面に見える件数を増やす（IMP-11）。押せる部分（完了のチェックボックスと［編集］）は、
+     見た目の大きさのまま、負の余白で44px角に広げる（行の高さを変えずに docs/design.md 7章の44pxを保つ） */
+  .item-row:not(.item-row--editing) {
     padding: 4px 0;
     gap: 0 12px;
+  }
+
+  .item-row__check {
+    width: 44px;
+    height: 44px;
+    margin: -11px;
   }
 
   .item-row__text {
@@ -1724,7 +1746,8 @@ body:has(.undo-bar) .app {
   }
 
   .item-row__sub .link-button {
-    min-height: 32px;
+    min-height: 44px;
+    margin: -6px 0;
   }
 
   .item-edit__actions button {

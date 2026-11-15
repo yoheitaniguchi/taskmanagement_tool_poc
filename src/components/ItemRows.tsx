@@ -65,20 +65,22 @@ function useRowState() {
 
 function CompleteBox({ kind, item, ctx, setError }: { kind: CompletableKind; item: Action | WaitingFor; ctx: RowContext; setError: (e: string | null) => void }) {
   const done = item.status === "done";
+  // label は押せる範囲を広げるための枠（スマホで44px角。index.css）。名前は input の aria-label で付ける
   return (
-    <input
-      type="checkbox"
-      className="item-row__check"
-      checked={done}
-      disabled={ctx.disabledReason !== null}
-      aria-label={done ? `「${item.text}」の完了を取り消す` : `「${item.text}」を完了にする`}
-      onChange={() => {
-        const ref = { kind, id: item.id };
-        const error = done ? ctx.onUncomplete(ref) : ctx.onComplete(ref);
-        setError(error);
-        if (error === null && !done) focusHeading();
-      }}
-    />
+    <label className="item-row__check">
+      <input
+        type="checkbox"
+        checked={done}
+        disabled={ctx.disabledReason !== null}
+        aria-label={done ? `「${item.text}」の完了を取り消す` : `「${item.text}」を完了にする`}
+        onChange={() => {
+          const ref = { kind, id: item.id };
+          const error = done ? ctx.onUncomplete(ref) : ctx.onComplete(ref);
+          setError(error);
+          if (error === null && !done) focusHeading();
+        }}
+      />
+    </label>
   );
 }
 
