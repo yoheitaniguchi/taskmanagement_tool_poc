@@ -138,30 +138,32 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers, onOpenPl
           </dd>
         </dl>
         {/* プロジェクトそのものの操作は、たまにしか使わないので属性の下に置き、強調しない。ふだん使う［足す］を主ボタンにする（IMP-06）。
-            押した結果（誤り・補足）は、ボタンのすぐ下に出す */}
-        <div className="project-ops">
-          <button type="button" disabled={blocked !== null} onClick={toggleDone}>
-            {active ? "完了にする" : "完了を取り消す"}
-          </button>
-          {active && (
-            <button
-              type="button"
-              disabled={blocked !== null}
-              onClick={() => {
-                // 未完了の子があると移せない（D4）。押したときに理由と件数を出し、すぐ下の一覧で片付けられるようにする
-                const open = openActions.length + openWaitings.length;
-                if (open > 0) setError(`未完了の次のアクション・連絡待ちが${open}件あります。先に完了・移動・削除してください`);
-                else setMoving(true);
-              }}
-            >
-              移す…
+            押した結果（誤り・補足）は、ボタンのすぐ下に出す。編集・四半期の変更の間は、フォームの［保存］と並ばないよう隠す */}
+        {!editing && !placing && (
+          <div className="project-ops" role="group" aria-label="このプロジェクトの操作">
+            <button type="button" disabled={blocked !== null} onClick={toggleDone}>
+              {active ? "完了にする" : "完了を取り消す"}
             </button>
-          )}
-          <button type="button" className="button--danger" disabled={blocked !== null} onClick={() => setDeleting(true)}>
-            削除…
-          </button>
-        </div>
-        {active && openActions.length + openWaitings.length > 0 && (
+            {active && (
+              <button
+                type="button"
+                disabled={blocked !== null}
+                onClick={() => {
+                  // 未完了の子があると移せない（D4）。押したときに理由と件数を出し、下の一覧で片付けられるようにする
+                  const open = openActions.length + openWaitings.length;
+                  if (open > 0) setError(`未完了の次のアクション・連絡待ちが${open}件あります。下の「次のアクション」「連絡待ち」の一覧で、完了・移動・削除してから移してください`);
+                  else setMoving(true);
+                }}
+              >
+                移す…
+              </button>
+            )}
+            <button type="button" className="button--danger" disabled={blocked !== null} onClick={() => setDeleting(true)}>
+              削除…
+            </button>
+          </div>
+        )}
+        {!editing && !placing && active && openActions.length + openWaitings.length > 0 && (
           <p className="hint">完了にすると、未完了の次のアクション・連絡待ち（{openActions.length + openWaitings.length}件）も一緒に完了になります。</p>
         )}
         {error !== null && (

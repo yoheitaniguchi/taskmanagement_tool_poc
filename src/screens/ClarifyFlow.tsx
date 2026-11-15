@@ -429,7 +429,7 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 {!isProject && d.choice === "next" && d.projectId === "" && (
                   <>
                     {/* 単独の次の一手のテーマは、プロジェクトのテーマと同じボタンの並びで1回押して決める（R-2。振り返り 7.2 の A）。
-                        任意なので「なし」を初めに置く。次のアクションの編集・移動の画面はプルダウンのまま（振り返り 確認事項 5） */}
+                        任意なので「なし」を初めに置く。次のアクションの編集の形と移動の画面はプルダウンのまま（振り返り 確認事項 5、計画 1.2） */}
                     <fieldset className="clarify__themes">
                       <legend>
                         テーマ <FieldMark required={false} />

@@ -939,6 +939,11 @@ tbody tr:hover > * {
     min-height: 44px;
   }
 
+  /* 明確化のテーマは毎回押すので、ボタンと同じ44pxにする（R-2） */
+  .clarify__themes .chip {
+    min-height: 44px;
+  }
+
   .button--icon,
   .segmented__item {
     min-height: 38px;
@@ -1251,6 +1256,11 @@ tbody tr:hover > * {
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   cursor: pointer;
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .chip:has(input:checked) {
