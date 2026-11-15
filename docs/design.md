@@ -556,7 +556,7 @@ interface AppState {
 | `summaries.ts` | `projectSummaries(state)`（件数と、次のアクション（先頭）の内容）、`placedProjectsByTheme(state, fy)`、`quarterOverview(state, fy, q)`、`roadmapCells(state, fy)`、`unplacedProjects(state)`、`activeProjectsPlacedBefore(state, fy)`、`counts(state)` | 数えて並べるだけ。「問題かどうか」の判定はしない（4.3） |
 | `validate.ts` | `validateState(unknown)`、`validateExport(unknown)`、`stateSize(state)`、`LIMITS` | 5.3のすべてのルールと、8.2の検証項目（4.6） |
 | `persistence.ts` | `storageNamespace`、`loadFromStorage`、`saveToStorage`、`clearStorage`、`loadDeviceMeta`、`saveDeviceMeta`、`loadThemePreference`、`saveThemePreference`、`parseExportText`、`serializeExport`、`exportFileName`、`storageUsage`、`getStorageManager`・`requestPersistence`（保存の保護。IMP-07） | 6章。Storage API（`navigator.storage` を含む）に触るのはこのファイルだけ |
-| `transfer.ts` | `isValidDeviceName`（保存・JSONの値の判定）、`validateDeviceName`（入力の正規化と判定）、`validateDeviceMeta`、`stateFingerprint`、`transferStatus(meta, state)` | 端末名の許可リスト。「書き出した後の変更があるか」を、書き出し・読み込みのときの状態の指紋と今の状態の比較で出す（6.2） |
+| `transfer.ts` | `isValidDeviceName`（保存・JSONの値の判定）、`validateDeviceName`（入力の正規化と判定）、`validateDeviceMeta`、`stateFingerprint`、`transferStatus(meta, state)`、`importActions(changed, exportBlocked, exportedAt)`（読み込みの確認で出すボタン） | 端末名の許可リスト。「書き出した後の変更があるか」を、書き出し・読み込みのときの状態の指紋と今の状態の比較で出す（6.2）。読み込みの確認で、書き出しのボタンを出すか・主ボタンにするか・置き換えのボタンの名前を、変更の有無・書き出せない理由・書き出した日時から決める（6.2。IMP-08） |
 | `reducer.ts` | `reducer(root, action)` | ドメインの関数を呼ぶだけ。「元に戻す」（`undo`）もここで扱い、任意の状態を置く操作は、検証済みのJSONの読み込み（`replaceState`）と消去（`reset`）だけにする（6.4） |
 
 ### 4.6 JSON・localStorageの読み込みでの検証
