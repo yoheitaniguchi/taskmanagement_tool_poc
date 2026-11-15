@@ -10,6 +10,7 @@ import { currentQuarter, quarterLabel, toLocalDate } from "../domain/fiscal";
 import { THEMES, isThemeId, type ThemeId } from "../domain/themes";
 import type { InboxItem, Placement, Project, Quarter } from "../domain/types";
 import { FieldMark } from "../components/FieldMark";
+import { ThemeChoice } from "../components/ThemeChoice";
 import { formatDateTime } from "../labels";
 import { clarifyHref, routeHref, type ClarifyStep } from "../route";
 import { backThenReplace, pushHash } from "../state/navigate";
@@ -428,17 +429,9 @@ export function ClarifyFlow({ items, projects, step: routeStep, now, disabledRea
                 )}
                 {!isProject && d.choice === "next" && d.projectId === "" && (
                   <>
-                    <label htmlFor="clarify-theme">
-                      テーマ <FieldMark required={false} />
-                    </label>
-                    <select id="clarify-theme" value={d.standaloneTheme} onChange={(e) => update({ standaloneTheme: e.target.value })}>
-                      <option value="">なし</option>
-                      {THEMES.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
+                    {/* 単独の次の一手のテーマは、プロジェクトのテーマと同じボタンの並びで1回押して決める（R-2。振り返り 7.2 の A）。
+                        次のアクションの編集の形と移動の画面も同じ部品にそろえる（計画 1.2、2026-11-15 発注者） */}
+                    <ThemeChoice name="clarify-standalone-theme" value={d.standaloneTheme} onChange={(id) => update({ standaloneTheme: id })} />
                   </>
                 )}
                 {errorBox}

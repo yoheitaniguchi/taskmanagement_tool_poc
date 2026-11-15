@@ -11,6 +11,7 @@ import { formatDate } from "../labels";
 import { FieldMark } from "./FieldMark";
 import { Field, useFieldId } from "./Field";
 import { MoveDialog } from "./MoveDialog";
+import { ThemeChoice } from "./ThemeChoice";
 import { ThemeLabel } from "./ThemeLabel";
 import { routeHref } from "../route";
 
@@ -367,7 +368,7 @@ function ActionEdit({ item, ctx, onClose }: { item: Action; ctx: RowContext; onC
   const [note, setNote] = useState(item.note);
   const [projectId, setProjectId] = useState(item.projectId ?? "");
   const [theme, setTheme] = useState<string>(item.themeId ?? "");
-  const themeId = useFieldId("theme");
+  const themeName = useFieldId("theme");
   const e = useEdit(ctx, { kind: "action", id: item.id }, onClose);
   return (
     <EditFrame
@@ -384,21 +385,8 @@ function ActionEdit({ item, ctx, onClose }: { item: Action; ctx: RowContext; onC
     >
       <Field name="text" spec={FIELDS.text} value={text} onChange={setText} autoFocus />
       <ProjectSelect value={projectId} current={item.projectId} ctx={ctx} onChange={setProjectId} />
-      {projectId === "" && (
-        <div className="item-edit__field">
-          <label htmlFor={themeId}>
-            テーマ <FieldMark required={false} />
-          </label>
-          <select id={themeId} value={theme} onChange={(ev) => setTheme(ev.target.value)}>
-            <option value="">なし</option>
-            {THEMES.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* 単独のときだけテーマを持てる。明確化と同じボタンの並び（計画 1.2、2026-11-15 発注者） */}
+      {projectId === "" && <ThemeChoice name={themeName} value={theme} onChange={setTheme} />}
       <Field name="note" spec={FIELDS.note} value={note} onChange={setNote} />
     </EditFrame>
   );

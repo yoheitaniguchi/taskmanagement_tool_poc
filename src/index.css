@@ -939,6 +939,14 @@ tbody tr:hover > * {
     min-height: 44px;
   }
 
+  /* テーマのボタンの並びは明確化で毎回押すので、ボタンと同じ44pxにする（R-2）。同じ並びを使うすべての画面
+     （明確化、次のアクションの編集の形、移動の画面、プロジェクトの形、四半期シートの重点テーマ）に効く。
+     移動の画面の「移す先」も、同じ画面のテーマと高さをそろえる */
+  .clarify__themes .chip,
+  .move-dialog__targets .chip {
+    min-height: 44px;
+  }
+
   .button--icon,
   .segmented__item {
     min-height: 38px;
@@ -1251,6 +1259,11 @@ tbody tr:hover > * {
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   cursor: pointer;
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .chip:has(input:checked) {
@@ -2137,4 +2150,9 @@ body:has(.undo-bar) .app {
     width: 44px;
     height: 44px;
   }
+}
+
+/* プロジェクトの詳細で、属性の下に置いた操作の行（IMP-06） */
+.attrs + .project-ops {
+  margin-top: 16px;
 }
