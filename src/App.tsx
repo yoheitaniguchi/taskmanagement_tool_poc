@@ -108,7 +108,7 @@ export default function App() {
   const captureBlocked = readOnly
     ? "このタブは読み取り専用です（別のタブで変更されたため）"
     : store.status.corrupt !== null && !store.status.recovered
-      ? "保存データを読めなかったため、自動保存を止めています。上の帯の操作で直すと入れられます"
+      ? "保存データを読めなかったため、自動保存を止めています。下の帯の操作で直すと入れられます"
       : null;
 
   /** 収集箱に入れる。入れられなければ理由を返す */
@@ -125,7 +125,7 @@ export default function App() {
   const changeBlocked = readOnly
     ? "このタブは読み取り専用です（別のタブで変更されたため）"
     : store.status.corrupt !== null && !store.status.recovered
-      ? "保存データを読めなかったため、自動保存を止めています。上の帯の操作で直すと振り分けられます"
+      ? "保存データを読めなかったため、自動保存を止めています。下の帯の操作で直すと振り分けられます"
       : null;
 
   /** 1件ずつの明確化を確定する。できなければ理由を返す（プロジェクトは最初の一手と合わせて id を2つ使う） */

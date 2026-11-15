@@ -59,6 +59,8 @@ export function CaptureBox({ inboxCount, disabledReason, onCapture }: Props) {
 
   const hintId = "capture-hint";
   const hint = disabledReason ?? textError ?? notice?.text ?? null;
+  // 重ねて出すのは、3秒で消える成功の知らせだけ（IMP-04。消えない理由・誤りは流れの中に出す）
+  const overlay = disabledReason === null && textError === null && notice !== null && !notice.error;
 
   return (
     <div className="capture">
@@ -91,7 +93,7 @@ export function CaptureBox({ inboxCount, disabledReason, onCapture }: Props) {
       {/* 読み上げにも伝わるよう、表示の場所は常に置いておく（中身だけを変える） */}
       <p
         id={hintId}
-        className={`capture__hint${textError !== null || notice?.error ? " capture__hint--error" : ""}`}
+        className={`capture__hint${textError !== null || notice?.error ? " capture__hint--error" : ""}${overlay ? " capture__hint--overlay" : ""}`}
         role="status"
       >
         {hint}
