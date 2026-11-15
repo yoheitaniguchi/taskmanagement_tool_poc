@@ -1052,13 +1052,37 @@ tbody tr:hover > * {
   font-size: 1.1rem;
 }
 
+/* 置き場の件数の小さな枠（IMP-02）。PC は4つを1行、スマホは2×2。既存の線と面のトークンだけを使う */
 .home__counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
   margin: 0;
-  padding-left: 1.2em;
+  padding: 0;
+  list-style: none;
 }
 
-.home__counts li {
-  margin: 4px 0;
+.home__count-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.home__count-label {
+  color: var(--accent);
+}
+
+.home__count-box:hover,
+.home__count-box:focus-visible {
+  border-color: var(--border-strong);
+  text-decoration: underline;
 }
 
 .intro {
@@ -1580,10 +1604,29 @@ body:has(.undo-bar) .app {
   white-space: normal;
 }
 
-.project-table__outcome {
-  max-width: 280px;
+.project-table__outcome,
+.project-table__first {
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 名称が1字ずつに折れないよう、名称の列に最小の幅を持たせる。狭いPCの幅では、省略する2つの列を細くする（IMP-01 で列が増えたため） */
+.project-table__name {
+  min-width: 7em;
+}
+
+@media (max-width: 1100px) {
+  .project-table__outcome,
+  .project-table__first {
+    max-width: 9em;
+  }
+}
+
+/* ホームの表：置いた四半期は短い表記なので折り返さない（IMP-02）。状態（「進行中」）も折り返さない */
+.project-table__quarter,
+.project-table__status {
   white-space: nowrap;
 }
 
@@ -1753,8 +1796,57 @@ body:has(.undo-bar) .app {
     content: attr(data-label) "：";
   }
 
-  .project-table__outcome {
+  .project-table__outcome,
+  .project-table__first {
     max-width: none;
+  }
+
+  .home__counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* ホームのカード（IMP-02）：1行目に名称、2行目にテーマ・四半期・件数を並べ、3行目に次のアクション（先頭）を1行で出す */
+  .project-table--compact tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 10px;
+  }
+
+  .project-table--compact th {
+    flex-basis: 100%;
+  }
+
+  .project-table--compact td {
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  .project-table--compact td::before {
+    content: none;
+  }
+
+  .project-table--compact td.project-table__count::before {
+    content: attr(data-label) " ";
+  }
+
+  /* 列の見出しが無いので、「置いていない」だけでは何のことか分からない。カードでは「四半期に置いていない」と読めるようにする */
+  .project-table--compact td[data-unplaced]::before {
+    content: "四半期に";
+  }
+
+  .project-table--compact .project-table__first {
+    flex-basis: 100%;
+    min-width: 0;
+    order: 2;
+    padding-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .project-table--compact .project-table__first::before {
+    content: attr(data-label) "：";
   }
 
   .attrs {

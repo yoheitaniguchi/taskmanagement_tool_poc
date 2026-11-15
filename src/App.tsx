@@ -266,6 +266,7 @@ export default function App() {
               const q = currentQuarter(now);
               return quarterOverview(state, q.fiscalYear, q.quarter);
             })()}
+            now={now}
             showIntro={!store.meta.introDismissed}
             onDismissIntro={store.dismissIntro}
           />

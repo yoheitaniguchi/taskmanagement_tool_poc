@@ -44,14 +44,31 @@ export interface ProjectSummary {
   nextActions: number;
   /** 待ちの連絡待ちの件数 */
   waiting: number;
+  /**
+   * 未着手の次のアクションのうち、先頭のものの内容（無ければ null。IMP-01）。
+   * 先頭は、次のアクションの一覧・プロジェクトの詳細と同じ並び（state.actions の配列の順）で決める。
+   * 作成日時では並べない（移動・明確化・追加で足したものは、作成日時が古くても配列の末尾に入るため。編集でプロジェクトを付け替えたものは、元の位置のまま）。
+   * どれを先にやるべきかの判定はしない（CLAUDE.md 4.3）
+   */
+  firstNextAction: string | null;
 }
 
 export function projectSummaries(state: AppState): ProjectSummary[] {
   const next = new Map<string, number>();
+  const first = new Map<string, string>();
   const waiting = new Map<string, number>();
-  for (const a of state.actions) if (a.projectId !== null && a.status === "todo") next.set(a.projectId, (next.get(a.projectId) ?? 0) + 1);
+  for (const a of state.actions) {
+    if (a.projectId === null || a.status !== "todo") continue;
+    next.set(a.projectId, (next.get(a.projectId) ?? 0) + 1);
+    if (!first.has(a.projectId)) first.set(a.projectId, a.text);
+  }
   for (const w of state.waitingFors) if (w.projectId !== null && w.status === "waiting") waiting.set(w.projectId, (waiting.get(w.projectId) ?? 0) + 1);
-  return state.projects.map((project) => ({ project, nextActions: next.get(project.id) ?? 0, waiting: waiting.get(project.id) ?? 0 }));
+  return state.projects.map((project) => ({
+    project,
+    nextActions: next.get(project.id) ?? 0,
+    waiting: waiting.get(project.id) ?? 0,
+    firstNextAction: first.get(project.id) ?? null,
+  }));
 }
 
 /**

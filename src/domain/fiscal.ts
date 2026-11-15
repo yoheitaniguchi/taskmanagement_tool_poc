@@ -77,3 +77,14 @@ export function quarterLabel(fiscalYear: number, quarter: Quarter, options: { sh
   if (options.short) return `第${quarter}四半期（${startMonth}〜${endMonth}月）`;
   return `${fiscalYearLabel(fiscalYear)} 第${quarter}四半期（${year}年${startMonth}〜${endMonth}月）`;
 }
+
+/**
+ * ホームのプロジェクトの表で使う短い表記（IMP-02）。今の年度なら「第3四半期」、ほかの年度なら「2025年度 第4四半期」、
+ * 置いていなければ「置いていない」。月は省く（ホームでは、月を含む「今の四半期」が表のすぐ上にあるため）。
+ * プロジェクトの一覧・詳細は、年度と暦の月の両方が分かる quarterLabel のまま（CLAUDE.md 5.2）
+ */
+export function quarterShortLabel(placement: Placement | null, now: Date): string {
+  if (placement === null) return "置いていない";
+  const q = `第${placement.quarter}四半期`;
+  return placement.fiscalYear === currentQuarter(now).fiscalYear ? q : `${fiscalYearLabel(placement.fiscalYear)} ${q}`;
+}

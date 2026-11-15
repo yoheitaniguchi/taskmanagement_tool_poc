@@ -157,9 +157,13 @@ describe("プロジェクトの一覧の件数と並べ替え（docs/design.md 3
       ...emptyState(),
       projects: [p],
       actions: [action({ projectId: p.id }), action({ projectId: p.id }), action({ projectId: p.id, status: "done" }), action()],
-      waitingFors: [waiting({ projectId: p.id, status: "done" })],
+      waitingFors: [waiting({ projectId: p.id, status: "done" }), waiting({ projectId: p.id }), waiting()],
     };
-    expect(projectSummaries(state)).toEqual([{ project: p, nextActions: 2, waiting: 0 }]);
+    // 項目を足しても合うように、件数だけを確かめる（先頭の次のアクションは summaries.test.ts）
+    const [s] = projectSummaries(state);
+    expect(projectSummaries(state)).toHaveLength(1);
+    expect(s.project).toBe(p);
+    expect([s.nextActions, s.waiting]).toEqual([2, 1]);
   });
 
   it("テーマ順・四半期順（置いていないものは最後）・名前順に並べる", () => {

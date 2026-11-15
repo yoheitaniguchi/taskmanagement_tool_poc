@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { currentQuarter, fiscalQuarterOf, fiscalYearLabel, isFiscalYear, isQuarter, isValidDate, quarterLabel, toLocalDate } from "./fiscal";
+import { currentQuarter, fiscalQuarterOf, fiscalYearLabel, isFiscalYear, isQuarter, isValidDate, quarterLabel, quarterShortLabel, toLocalDate } from "./fiscal";
 
 // テストのタイムゾーンは Asia/Tokyo（vite.config.ts）。CI は UTC で動くため、ここで日本時間の境界を確かめる（CLAUDE.md 5.2）
 describe("年度と四半期（CLAUDE.md 5.2）", () => {
@@ -51,5 +51,27 @@ describe("年度と四半期（CLAUDE.md 5.2）", () => {
     expect([1999, 2000, 2099, 2100].map(isFiscalYear)).toEqual([false, true, true, false]);
     for (const v of [2026.5, "2026", null, Number.NaN]) expect(isFiscalYear(v)).toBe(false);
     expect([0, 1, 4, 5, "1", 1.5].map(isQuarter)).toEqual([false, true, true, false, false, false]);
+  });
+});
+
+describe("ホームの短い四半期の表記（IMP-02。quarterShortLabel）", () => {
+  const NOW = new Date("2026-11-15T03:00:00.000Z"); // 2026年度 第3四半期
+
+  it("今の年度は「第N四半期」、前後の年度は年度を付ける", () => {
+    expect(quarterShortLabel({ fiscalYear: 2026, quarter: 3 }, NOW)).toBe("第3四半期");
+    expect(quarterShortLabel({ fiscalYear: 2026, quarter: 4 }, NOW)).toBe("第4四半期");
+    expect(quarterShortLabel({ fiscalYear: 2025, quarter: 4 }, NOW)).toBe("2025年度 第4四半期");
+    expect(quarterShortLabel({ fiscalYear: 2027, quarter: 1 }, NOW)).toBe("2027年度 第1四半期");
+  });
+
+  it("置いていなければ「置いていない」", () => {
+    expect(quarterShortLabel(null, NOW)).toBe("置いていない");
+  });
+
+  it("年度の境界（3/31 と 4/1）は、端末のタイムゾーンの日付で決める（UTC の前日 15:00 が日本時間の 0:00）", () => {
+    const q4 = { fiscalYear: 2026, quarter: 4 } as const;
+    expect(quarterShortLabel(q4, new Date("2027-03-31T14:59:59.999Z"))).toBe("第4四半期");
+    expect(quarterShortLabel(q4, new Date("2027-03-31T15:00:00.000Z"))).toBe("2026年度 第4四半期");
+    expect(quarterShortLabel({ fiscalYear: 2027, quarter: 1 }, new Date("2027-03-31T15:00:00.000Z"))).toBe("第1四半期");
   });
 });
