@@ -3,7 +3,7 @@
 - **最終更新日時：** 2026-11-15 23:40（日本時間）
 - **最終担当 AI：** Claude Code（実装担当）
 - **対象ブランチ：** `claude/project-thread-ad3sgr`
-- **関連 Issue / PR：** Issue #40。前の PR 14 の引き継ぎ文書は `docs/handovers/archive/claude-project-thread-ad3sgr-pr14.md` に移した（AGENTS.md 6章）
+- **関連 Issue / PR：** Issue #40、PR #41。前の PR 14 の引き継ぎ文書は `docs/handovers/archive/claude-project-thread-ad3sgr-pr14.md` に移した（AGENTS.md 6章）
 - **計画：** `docs/plans/improvements-after-retrospective.md` の 2章の表の5（IMP-03・IMP-04・IMP-05・IMP-10）。改善提案 `docs/reviews/improvement-review-2026-11-09.md` の 4.1・4.2・4.3・5.2
 
 詳細ルール 6章の試し運転の3本目です。実装は Claude Code が済ませたので、**レビューは別の AI が行います**（AGENTS.md 2章「作った人は、確かめない」）。
