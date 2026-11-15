@@ -5,12 +5,13 @@ import { useState, type ReactNode } from "react";
 import { FIELDS } from "../domain/fields";
 import type { CompletableKind, ItemEdit, ItemRef } from "../domain/items";
 import type { MoveInput, MoveRef, PlaceKind } from "../domain/move";
-import { THEMES, isThemeId, themeLabel } from "../domain/themes";
+import { THEMES, isThemeId } from "../domain/themes";
 import type { Action, AppState, Project, ReferenceItem, SomedayItem, WaitingFor } from "../domain/types";
 import { formatDate } from "../labels";
 import { FieldMark } from "./FieldMark";
 import { Field, useFieldId } from "./Field";
 import { MoveDialog } from "./MoveDialog";
+import { ThemeLabel } from "./ThemeLabel";
 import { routeHref } from "../route";
 
 export interface ItemHandlers {
@@ -84,7 +85,11 @@ function CompleteBox({ kind, item, ctx, setError }: { kind: CompletableKind; ite
 function ProjectLink({ projectId, ctx }: { projectId: string | null; ctx: RowContext }) {
   if (projectId === null || !ctx.showProject) return null;
   const p = ctx.projects.find((x) => x.id === projectId);
-  return p ? <a href={routeHref("projects", p.id)}>{p.name}</a> : null;
+  return p ? (
+    <a className="row-link" href={routeHref("projects", p.id)}>
+      {p.name}
+    </a>
+  ) : null;
 }
 
 function DoneMark({ item, now }: { item: { status: string; completedAt: string | null }; now: Date }) {
@@ -151,7 +156,7 @@ function ActionRow({ item, ctx }: { item: Action; ctx: RowContext }) {
       text={item.text}
       meta={[
         <ProjectLink key="p" projectId={item.projectId} ctx={ctx} />,
-        item.projectId === null && item.themeId !== null ? themeLabel(item.themeId) : null,
+        item.projectId === null && item.themeId !== null ? <ThemeLabel key="t" id={item.themeId} /> : null,
         captured(item, ctx.now),
         <DoneMark key="d" item={item} now={ctx.now} />,
       ]}

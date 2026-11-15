@@ -12,6 +12,7 @@ import { FIELDS } from "../domain/fields";
 import { currentQuarter, fiscalYearLabel, quarterLabel, toLocalDate } from "../domain/fiscal";
 import type { ChildPolicy, ProjectInput } from "../domain/projects";
 import { themeLabel } from "../domain/themes";
+import { ThemeLabel } from "../components/ThemeLabel";
 import type { AppState, Placement, Project } from "../domain/types";
 import type { PlaceKind } from "../domain/move";
 import { routeHref, type ScreenId } from "../route";
@@ -133,7 +134,9 @@ export function ProjectDetailScreen({ project: p, state, ctx, handlers, onOpenPl
             <dt>目的とする成果</dt>
             <dd className="pre-wrap">{p.outcome}</dd>
             <dt>テーマ</dt>
-            <dd>{themeLabel(p.themeId)}</dd>
+            <dd>
+              <ThemeLabel id={p.themeId} />
+            </dd>
             <dt>メモ</dt>
             <dd className="pre-wrap">{p.note === "" ? "なし" : p.note}</dd>
           </dl>

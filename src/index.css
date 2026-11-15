@@ -71,6 +71,49 @@
   color-scheme: dark;
 }
 
+/* ---- ライトモードの色の案（PRプレビューで比べるためだけのもの。振り返り 7.1、計画 2.1）----
+   PRプレビューの帯の切替（LightVariantSwitch）が <html data-light-variant> を付ける。data-theme="light" のときだけ効き、ダークは変えない。
+   面との明るさの比を保つため、薄いアクセントと知らせの背景も、面と同じ割合で下げる。文字・アクセントの色は変えない。
+   発注者が案を選んだら、選んだ値を上の :root に入れ、このかたまりと切替の部品を消してからマージする */
+:root[data-theme="light"][data-light-variant="a"] {
+  --bg: #f2f2f4;
+  --surface: #fafafa;
+  --surface-2: #ececef;
+  --surface-glass: rgb(250 250 250 / 0.82);
+  --border: #dcdce1;
+  --border-strong: #cacad0;
+  --accent-soft: #e9edfa;
+  --warn-bg: #faf6e6;
+  --info-bg: #eaf1fa;
+  --danger-bg: #f9eded;
+}
+
+:root[data-theme="light"][data-light-variant="b"] {
+  --bg: #ebebee;
+  --surface: #f5f5f7;
+  --surface-2: #e4e4e8;
+  --surface-glass: rgb(245 245 247 / 0.82);
+  --border: #d4d4da;
+  --border-strong: #c1c1c8;
+  --accent-soft: #e5e8f7;
+  --warn-bg: #f5f1e4;
+  --info-bg: #e6ecf7;
+  --danger-bg: #f4e8ea;
+}
+
+:root[data-theme="light"][data-light-variant="c"] {
+  --bg: #e3e3e7;
+  --surface: #eeeef1;
+  --surface-2: #dcdce1;
+  --surface-glass: rgb(238 238 241 / 0.82);
+  --border: #cbcbd2;
+  --border-strong: #b7b7bf;
+  --accent-soft: #dee2f1;
+  --warn-bg: #eeeade;
+  --info-bg: #dfe6f1;
+  --danger-bg: #ede2e5;
+}
+
 *,
 *::before,
 *::after {
@@ -107,6 +150,47 @@ h3 {
 
 a {
   color: var(--accent);
+}
+
+/* 行・カード・表の中の名称のリンクは、下線を出さず文字の色にする（IMP-09。情報の多い画面で線が重ならないように）。
+   押せることは、カードの枠・表の行の位置と、ホバー・キーボードのフォーカスのときの下線で分かる。文中のリンクは下線のまま */
+.row-link,
+.roadmap-card__name,
+.project-table__name a,
+.plan-placed a,
+.plan-sheet__projects a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.row-link {
+  color: inherit;
+}
+
+.row-link:hover,
+.row-link:focus-visible,
+.roadmap-card__name:hover,
+.roadmap-card__name:focus-visible,
+.project-table__name a:hover,
+.project-table__name a:focus-visible,
+.plan-placed a:hover,
+.plan-placed a:focus-visible,
+.plan-sheet__projects a:hover,
+.plan-sheet__projects a:focus-visible {
+  text-decoration: underline;
+}
+
+/* テーマ名の小さなラベル（IMP-12）。色は足さず、既存の線と面のトークンだけで形を揃える */
+.theme-label {
+  display: inline-block;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: nowrap;
 }
 
 :focus-visible {
@@ -464,6 +548,22 @@ a.button {
   border-radius: 0;
   border-width: 0 0 1px;
   margin: 0;
+}
+
+/* ライトモードの案の切替（PRプレビューだけ。計画 2.1） */
+.light-variant {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding: 0;
+  border: none;
+}
+
+.light-variant legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
 }
 
 /* 表示テーマの切替 */
@@ -1607,6 +1707,16 @@ body:has(.undo-bar) .app {
 }
 
 @media (max-width: 720px) {
+  /* Android の幅で1画面に見える件数を増やす（IMP-11）。押せる部分は下の min-height で保つ */
+  .item-row {
+    padding: 4px 0;
+    gap: 0 12px;
+  }
+
+  .item-row__text {
+    line-height: 1.5;
+  }
+
   .item-row__sub {
     margin-left: 28px;
     width: 100%;

@@ -5,7 +5,7 @@ import { ProjectForm } from "../components/ProjectForm";
 import { quarterLabel } from "../domain/fiscal";
 import type { ProjectInput } from "../domain/projects";
 import { projectSummaries, sortProjects, type ProjectOrder } from "../domain/summaries";
-import { themeLabel } from "../domain/themes";
+import { ThemeLabel } from "../components/ThemeLabel";
 import type { AppState, Placement } from "../domain/types";
 import { routeHref } from "../route";
 import { pushHash } from "../state/navigate";
@@ -100,7 +100,9 @@ export function ProjectsScreen({ state, now, disabledReason, onCreate }: Props) 
                   <td className="project-table__outcome" data-label="目的とする成果">
                     {p.outcome.split("\n", 1)[0]}
                   </td>
-                  <td data-label="テーマ">{themeLabel(p.themeId)}</td>
+                  <td data-label="テーマ">
+                    <ThemeLabel id={p.themeId} />
+                  </td>
                   <td data-label="置いた四半期">{p.placement ? quarterLabel(p.placement.fiscalYear, p.placement.quarter) : "置いていない"}</td>
                   <td data-label="次のアクション">{nextActions}件</td>
                   <td data-label="連絡待ち">{waiting}件</td>

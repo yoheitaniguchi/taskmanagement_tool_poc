@@ -3,6 +3,7 @@
 import { quarterLabel } from "../domain/fiscal";
 import type { Counts, ProjectSummary, QuarterOverview } from "../domain/summaries";
 import { themeLabel } from "../domain/themes";
+import { ThemeLabel } from "../components/ThemeLabel";
 import { clarifyHref, routeHref, type ScreenId } from "../route";
 
 interface Props {
@@ -79,7 +80,9 @@ export function HomeScreen({ counts, projects, quarter, showIntro, onDismissIntr
                   <th scope="row" className="project-table__name">
                     <a href={routeHref("projects", p.id)}>{p.name}</a>
                   </th>
-                  <td data-label="テーマ">{themeLabel(p.themeId)}</td>
+                  <td data-label="テーマ">
+                    <ThemeLabel id={p.themeId} />
+                  </td>
                   <td data-label="置いた四半期">{p.placement ? quarterLabel(p.placement.fiscalYear, p.placement.quarter) : "置いていない"}</td>
                   <td data-label="次のアクション">{nextActions}件</td>
                   <td data-label="連絡待ち">{waiting}件</td>
