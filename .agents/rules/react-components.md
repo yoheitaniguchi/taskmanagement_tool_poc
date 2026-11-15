@@ -1,6 +1,6 @@
 ---
 trigger: glob
-globs: src/components/**/*.tsx
+globs: src/{components,screens}/**/*.tsx
 ---
 # React コンポーネント規約（.agents/rules/react-components.md に配置）
 
