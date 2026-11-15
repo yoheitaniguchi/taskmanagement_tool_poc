@@ -114,6 +114,34 @@
   --danger-bg: #ede2e5;
 }
 
+/* D・E：明るさは B と同じ段階のまま、地・面・線を青みのグレーからクリーム寄りの暖色にした案（2026-11-15 発注者の相談で、
+   「配色は変えない」の範囲を広げた）。薄いアクセントと知らせの背景、文字・アクセントの色は B と同じ */
+:root[data-theme="light"][data-light-variant="d"] {
+  --bg: #efebe2;
+  --surface: #f9f5ec;
+  --surface-2: #e8e4dc;
+  --surface-glass: rgb(249 245 236 / 0.82);
+  --border: #d9d4ca;
+  --border-strong: #c6c1b7;
+  --accent-soft: #e5e8f7;
+  --warn-bg: #f5f1e4;
+  --info-bg: #e6ecf7;
+  --danger-bg: #f4e8ea;
+}
+
+:root[data-theme="light"][data-light-variant="e"] {
+  --bg: #f2ebdb;
+  --surface: #fcf5e5;
+  --surface-2: #ebe4d4;
+  --surface-glass: rgb(252 245 229 / 0.82);
+  --border: #ddd3c0;
+  --border-strong: #cac0ad;
+  --accent-soft: #e5e8f7;
+  --warn-bg: #f5f1e4;
+  --info-bg: #e6ecf7;
+  --danger-bg: #f4e8ea;
+}
+
 *,
 *::before,
 *::after {

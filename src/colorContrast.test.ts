@@ -50,7 +50,7 @@ const PAIRS: [string, string][] = [
 
 const base = tokens(":root");
 const sets: [string, Record<string, string>][] = [["今の値（:root）", base]];
-for (const v of ["a", "b", "c"]) {
+for (const v of ["a", "b", "c", "d", "e"]) {
   const selector = `:root[data-theme="light"][data-light-variant="${v}"]`;
   if (css.includes(`${selector} {`)) sets.push([`案 ${v.toUpperCase()}`, { ...base, ...tokens(selector) }]);
 }
