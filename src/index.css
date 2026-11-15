@@ -1075,6 +1075,10 @@ tbody tr:hover > * {
   text-decoration: none;
 }
 
+.home__count-label {
+  color: var(--accent);
+}
+
 .home__count-box:hover,
 .home__count-box:focus-visible {
   border-color: var(--border-strong);
@@ -1608,6 +1612,18 @@ body:has(.undo-bar) .app {
   white-space: nowrap;
 }
 
+/* 名称が1字ずつに折れないよう、名称の列に最小の幅を持たせる。狭いPCの幅では、省略する2つの列を細くする（IMP-01 で列が増えたため） */
+.project-table__name {
+  min-width: 7em;
+}
+
+@media (max-width: 1100px) {
+  .project-table__outcome,
+  .project-table__first {
+    max-width: 9em;
+  }
+}
+
 /* ホームの表：置いた四半期は短い表記なので折り返さない（IMP-02）。状態（「進行中」）も折り返さない */
 .project-table__quarter,
 .project-table__status {
@@ -1794,6 +1810,7 @@ body:has(.undo-bar) .app {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
+    column-gap: 10px;
   }
 
   .project-table--compact th {
@@ -1809,12 +1826,13 @@ body:has(.undo-bar) .app {
     content: none;
   }
 
-  .project-table--compact td.project-table__theme {
-    margin-right: 6px;
+  .project-table--compact td.project-table__count::before {
+    content: attr(data-label) " ";
   }
 
-  .project-table--compact td.project-table__count::before {
-    content: "・" attr(data-label) " ";
+  /* 列の見出しが無いので、「置いていない」だけでは何のことか分からない。カードでは「四半期に置いていない」と読めるようにする */
+  .project-table--compact td[data-unplaced]::before {
+    content: "四半期に";
   }
 
   .project-table--compact .project-table__first {

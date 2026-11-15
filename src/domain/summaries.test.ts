@@ -1,6 +1,7 @@
 // プロジェクトの一覧の「次のアクション（先頭）」（IMP-01。docs/design.md 3.2・3.6）。
 // 並びの先頭を出すだけで、どれを先にやるべきかの判定や、0件の強調はしない（CLAUDE.md 4.3）
 import { describe, expect, it } from "vitest";
+import { moveItem } from "./move";
 import { projectSummaries } from "./summaries";
 import { emptyState, type Action, type AppState, type Project, type WaitingFor } from "./types";
 import { validateState } from "./validate";
@@ -67,6 +68,18 @@ describe("次のアクション（先頭）（IMP-01。projectSummaries の firs
     const later = { ...action("先にあった", p.id), createdAt: T1, updatedAt: T1, capturedAt: T1 };
     const state = { ...emptyState(), projects: [p], actions: [later, moved] };
     expect(firstOf(state, p)).toBe("先にあった");
+  });
+
+  it("移動で次のアクションにしたもの（連絡待ちから戻したもの）は、作成日時が古くても先頭にならない", () => {
+    const p = project("架空のA");
+    const w = waiting(p.id); // T0 に作った連絡待ち
+    const a = { ...action("前からある一手", p.id), createdAt: T1, updatedAt: T1, capturedAt: T1 };
+    const state = { ...emptyState(), projects: [p], actions: [a], waitingFors: [w] };
+    const input = { text: "戻した一手", outcome: "", themeId: null, placement: null, party: "", requestedOn: "2026-11-10" };
+    const r = moveItem(state, { kind: "waiting", id: w.id }, "action", input, new Date("2026-11-12T00:00:00.000Z"));
+    if (!r.ok) throw new Error(r.error);
+    expect(firstOf(r.state, p)).toBe("前からある一手");
+    expect(projectSummaries(r.state)[0].nextActions).toBe(2);
   });
 
   it("連絡待ちだけなら null（連絡待ちは件数の列で示す）", () => {
