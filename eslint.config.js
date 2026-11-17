@@ -25,15 +25,18 @@ const restrictedProperties = (names) =>
 
 // どのオブジェクトの上でも禁じるプロパティ（window.localStorage、el.innerHTML、navigator.sendBeacon など）
 const HTML_SINKS = ["innerHTML", "outerHTML", "insertAdjacentHTML"];
-const OTHER_PROPS = ["sendBeacon", ...NETWORK_APIS];
+// Reflect はプロパティとしても禁じる（window.Reflect・globalThis.Reflect。SEC-010）
+const OTHER_PROPS = ["sendBeacon", "Reflect", ...NETWORK_APIS];
 
 // Reflect は使わない（プロパティの名前を文字列で渡して、上の禁止をすり抜けられるため。SEC-009）
 const REFLECT = [{ name: "Reflect", message: "Reflect は使わない（保存・通信の禁止をすり抜けられるため。SEC-009）" }];
 
-// ブラウザの大もとのオブジェクトへの、変数・式をキーにした参照（文字のキー window["x"] は no-restricted-properties が見る。SEC-009）
+// ブラウザの大もとのオブジェクトへの、変数・式をキーにした参照（文字のキー window["x"] は no-restricted-properties が見る。SEC-009）。
+// 型の変換で包んだ形（(window as X)[k]、window![k]、2重の as）と、1段下の参照（window.navigator[k]）も見る（SEC-010）
 const GLOBAL_OBJECTS = ["window", "self", "globalThis", "navigator", "document", "top", "parent", "frames"];
+const GLOBAL_NAME = `/^(${GLOBAL_OBJECTS.join("|")})$/`;
 const noDynamicGlobalAccess = {
-  selector: `MemberExpression[computed=true][property.type!='Literal'][object.type='Identifier'][object.name=/^(${GLOBAL_OBJECTS.join("|")})$/]`,
+  selector: `MemberExpression[computed=true][property.type!='Literal']:matches([object.name=${GLOBAL_NAME}], [object.expression.name=${GLOBAL_NAME}], [object.expression.expression.name=${GLOBAL_NAME}], [object.object.name=${GLOBAL_NAME}])`,
   message: "window・navigator・document などに、変数や式をキーにした参照（window[k]）をしない（保存・通信の禁止をすり抜けられるため。SEC-009）",
 };
 
