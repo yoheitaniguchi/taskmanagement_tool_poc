@@ -20,7 +20,7 @@ Node.js 22 を使う。
 | `npm run lint` / `npm run typecheck` | lint・型チェック |
 | `npm run build` | 本番ビルド（`dist/`。CSP を入れる） |
 
-CI（`.github/workflows/ci.yml`）は、lint・型チェック・単体テスト・依存の脆弱性スキャン・gitleaks・ビルドと、ビルド成果物にデータファイルが無いことの検査を行う。
+CI（`.github/workflows/ci.yml`）は、lint・型チェック・単体テスト・依存の脆弱性スキャン（開発依存を含め、1件でもあれば失敗）・gitleaks・ビルドと、ビルド成果物にデータファイルが無いことの検査を行う。
 
 ## 文書
 

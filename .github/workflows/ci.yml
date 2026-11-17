@@ -47,8 +47,10 @@ jobs:
           node-version: 22
       - name: 本番依存の脆弱性（high/critical は失敗）
         run: npm audit --omit=dev --audit-level=high
-      - name: 開発依存を含む脆弱性（結果の表示のみ）
-        run: npm audit || true
+      # 開発依存を含めて、1件でもあれば失敗にする（2026-11-17 発注者の決定。Issue #50）。
+      # 直った版がまだ無いときの扱いは docs/security/checklist.md の F を見る
+      - name: 開発依存を含む脆弱性（1件でもあれば失敗）
+        run: npm audit
 
   secret-scan:
     runs-on: ubuntu-latest

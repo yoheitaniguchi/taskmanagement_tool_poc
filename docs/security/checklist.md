@@ -75,7 +75,9 @@
 - 配信はCIの成功を条件にしている。`concurrency`がある
 - トリガーに`pull_request_target`を使っていない
 - Actionはコミットsha固定。Dependabot（npm・github-actions）がある
-- `package-lock.json`をコミットし、CIは`npm ci`。本番依存はhigh/critical 0件。dev依存の結果とライセンス一覧を確認している
+- `package-lock.json`をコミットし、CIは`npm ci`。本番依存はhigh/critical 0件。開発依存を含めて脆弱性が1件でもあれば dependency-audit が失敗する（2026-11-17 から。Issue #50）。ライセンス一覧を確認している
+  - 脆弱性が見つかったとき：直った版があれば、Dependabot のPRか、版を上げるPRで直す。直った版がまだ無く、悪用の経路が実質無いときは、発注者の判断でリスクを受け入れて指摘として記録し（SEC-002 の前例）、`ci.yml` のその行を一時的に表示だけ（`npm audit || true`）へ戻すPRを出す（本番依存の検査は `--omit=dev` の行で続く）。直った版が出たら、失敗扱いに戻す
+  - dependency-audit は配信（deploy）の条件でもある。失敗している間は main への push でも配信されないので、データを失う不具合の修正を急ぐときは、上の受け入れを先に行う
 - `vite.config.ts`で開発サーバーを外部に公開していない（`server.host`）
 
 ## 人手で確認する項目（テスト不能）
