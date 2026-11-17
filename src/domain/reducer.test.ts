@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyResult, initialRoot, operate, reducer, type Operation } from "./reducer";
+import { applyResult, commitAction, initialRoot, operate, reducer, type Operation } from "./reducer";
 import { sampleState } from "./testData";
 import { emptyState } from "./types";
 
@@ -133,5 +133,43 @@ describe("操作の対応（operate。reducer と画面の失敗の理由が同�
     const op = { type: "placeProject", id: project.id, placement: { fiscalYear: 2026, quarter: 4 }, at } as const;
     const expected = project.placement === null ? "に置きました" : "に移しました";
     expect(operate(state, op)?.undoMessage).toContain(expected);
+  });
+});
+
+describe("反映してよいかの判定（commitAction。reducer は操作1回につき1回だけ呼ぶ。docs/design.md 6.3）", () => {
+  const at = "2026-11-17T00:00:00.000Z";
+  const op = { type: "capture", text: "架空の思いつき", at, id: "00000000-0000-4000-8000-000000009999" } as const;
+
+  it("ふだんは反映し、変更ありに数える", () => {
+    const root = initialRoot(sampleState());
+    const commit = commitAction(root, op, false);
+    expect(commit?.root.state.inbox.length).toBe(root.state.inbox.length + 1);
+    expect(commit?.changed).toBe(true);
+  });
+
+  it("[@security] 読み取り専用のタブでは反映しない（別のタブの保存を黙って上書きしないため）", () => {
+    expect(commitAction(initialRoot(sampleState()), op, true)).toBeNull();
+    expect(commitAction(initialRoot(sampleState()), { type: "replaceState", state: sampleState() }, true)).toBeNull();
+  });
+
+  it("[@security] 受け付けられなかった操作は反映しない（検証に通らない読み込みなど）", () => {
+    const bad = sampleState();
+    bad.projects[0].themeId = "unknown" as never;
+    expect(commitAction(initialRoot(sampleState()), { type: "replaceState", state: bad }, false)).toBeNull();
+    expect(commitAction(initialRoot(sampleState()), { ...op, text: "" }, false)).toBeNull();
+  });
+
+  it("読み込み・消去・表示の切替は、変更ありに数えない", () => {
+    const withUndo = applyResult(initialRoot(emptyState()), { ok: true, state: sampleState() }, "テストの操作をしました");
+    expect(commitAction(withUndo, { type: "replaceState", state: sampleState() }, false)?.changed).toBe(false);
+    expect(commitAction(withUndo, { type: "reset" }, false)?.changed).toBe(false);
+    expect(commitAction(withUndo, { type: "dismissUndo" }, false)?.changed).toBe(false);
+    expect(commitAction(withUndo, { type: "forgetUndo" }, false)?.changed).toBe(false);
+  });
+
+  it("「元に戻す」で状態が戻るのは、変更ありに数える", () => {
+    const before = initialRoot(emptyState());
+    const after = applyResult(before, { ok: true, state: sampleState() }, "テストの操作をしました");
+    expect(commitAction(after, { type: "undo" }, false)?.changed).toBe(true);
   });
 });

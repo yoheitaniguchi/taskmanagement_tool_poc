@@ -1,6 +1,6 @@
 // 状態を変える操作（CLAUDE.md 8.1、docs/design.md 4.5・6.4）。データのルールはドメインの関数で守らせ、reducer はそれを呼ぶだけにする。
 // 任意の状態を外から置く操作は、検証し直す JSON の読み込み（replaceState）と、消去（reset）だけにする（検証を迂回する経路を作らないため）。
-// 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。StrictMode では reducer が2回呼ばれる）
+// 今の時刻と新しい id は、操作（action）に入れて渡す（reducer を純粋に保つため。同じ操作を何度呼んでも同じ結果になる）
 import { capture } from "./capture";
 import { parseAt } from "./common";
 import { bulkMessage, clarify, clarifyBulk, EXIT_MESSAGES, type BulkExit, type Decision } from "./clarify";
@@ -233,4 +233,24 @@ export function reducer(root: Root, action: Action): Root {
       return outcome === null ? root : applyResult(root, outcome.result, outcome.undoMessage);
     }
   }
+}
+
+/** 状態を変えたことに数えない操作（読み込み・消去・表示の切替） */
+const NOT_A_CHANGE: ReadonlySet<string> = new Set(["replaceState", "reset", "dismissUndo", "forgetUndo"]);
+
+/** 操作を画面の状態に反映した結果。changed は「最後に書き出してから変更あり」に数えるか */
+export interface Commit {
+  root: Root;
+  changed: boolean;
+}
+
+/**
+ * 操作を反映してよいかを決め、反映した後の状態を返す（docs/design.md 6.3）。reducer は、操作1回につきここで1回だけ呼ぶ。
+ * 読み取り専用のタブ（別のタブで変更された）では反映しない。受け付けられなかった操作（同じ参照が返る）も null
+ */
+export function commitAction(root: Root, action: Action, readOnly: boolean): Commit | null {
+  if (readOnly) return null;
+  const after = reducer(root, action);
+  if (after === root) return null;
+  return { root: after, changed: after.state !== root.state && !NOT_A_CHANGE.has(action.type) };
 }
