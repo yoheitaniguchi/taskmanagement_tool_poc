@@ -9,14 +9,10 @@ import { DeviceNameDialog } from "./components/DeviceNameDialog";
 import { ImportDialog } from "./components/ImportDialog";
 import { StorageBanner } from "./components/StorageBanner";
 import { UndoBar } from "./components/UndoBar";
-import { capture } from "./domain/capture";
-import { clarify, clarifyBulk, type BulkExit, type Decision } from "./domain/clarify";
-import { addActionToProject, addWaitingToProject, completeItem, deleteItem, editItem, uncompleteItem } from "./domain/items";
-import { moveItem } from "./domain/move";
-import { setAnnualGoal, setWontDo, toggleFocusTheme } from "./domain/plan";
-import { completeProject, createProject, deleteProject, editProject, placeProject, uncompleteProject } from "./domain/projects";
+import type { BulkExit, Decision } from "./domain/clarify";
+import type { createProject } from "./domain/projects";
 import { currentQuarter } from "./domain/fiscal";
-import type { OpResult } from "./domain/types";
+import { operate, type Operation } from "./domain/reducer";
 import type { RowContext } from "./components/ItemRows";
 import { backupFileName } from "./domain/persistence";
 import { counts, projectSummaries, quarterOverview, sortProjects } from "./domain/summaries";
@@ -104,60 +100,42 @@ export default function App() {
   const c = counts(state);
   const now = new Date();
 
-  /** 収集の入力欄を使えない理由（入れた内容が保存されないため。docs/design.md 6.3） */
-  const captureBlocked = readOnly
-    ? "このタブは読み取り専用です（別のタブで変更されたため）"
-    : store.status.corrupt !== null && !store.status.recovered
-      ? "保存データを読めなかったため、自動保存を止めています。下の帯の操作で直すと入れられます"
-      : null;
+  /** 収集・明確化・置き場の変更を使えない理由（入れた内容が保存されないため。docs/design.md 6.3）。verb は「入れられます」など */
+  const blockedReason = (verb: string): string | null =>
+    readOnly
+      ? "このタブは読み取り専用です（別のタブで変更されたため）"
+      : store.status.corrupt !== null && !store.status.recovered
+        ? `保存データを読めなかったため、自動保存を止めています。下の帯の操作で直すと${verb}`
+        : null;
+  const captureBlocked = blockedReason("入れられます");
+  const changeBlocked = blockedReason("振り分けられます");
 
-  /** 収集箱に入れる。入れられなければ理由を返す */
-  const onCapture = (text: string): string | null => {
-    const at = new Date();
-    const id = crypto.randomUUID();
-    if (store.dispatch({ type: "capture", text, at: at.toISOString(), id })) return null;
-    // 入れられなかった理由を、同じ関数で確かめ直して示す（読み取り専用になった直後など、関数の外の理由もある）
-    const result = capture(state, text, at, () => id);
-    return result.ok ? "このタブでは入れられません" : result.error;
-  };
-
-  /** 明確化・置き場の変更を使えない理由（収集と同じ。docs/design.md 6.3） */
-  const changeBlocked = readOnly
-    ? "このタブは読み取り専用です（別のタブで変更されたため）"
-    : store.status.corrupt !== null && !store.status.recovered
-      ? "保存データを読めなかったため、自動保存を止めています。下の帯の操作で直すと振り分けられます"
-      : null;
-
-  /** 1件ずつの明確化を確定する。できなければ理由を返す（プロジェクトは最初の一手と合わせて id を2つ使う） */
-  const onClarify = (itemId: string, decision: Decision): string | null => {
-    const at = new Date();
-    const ids = [crypto.randomUUID(), crypto.randomUUID()];
-    if (store.dispatch({ type: "clarify", itemId, decision, at: at.toISOString(), ids })) return null;
-    let i = 0;
-    const result = clarify(state, itemId, decision, at, () => ids[i++] ?? "");
-    return result.ok ? "このタブでは振り分けられません" : result.error;
-  };
-
-  /** 一括振り分け。できなければ理由を返す */
-  const onBulk = (itemIds: string[], exit: BulkExit): string | null => {
-    const at = new Date();
-    const ids = itemIds.map(() => crypto.randomUUID());
-    if (store.dispatch({ type: "clarifyBulk", itemIds, exit, at: at.toISOString(), ids })) return null;
-    let i = 0;
-    const result = clarifyBulk(state, itemIds, exit, at, () => ids[i++] ?? "");
-    return result.ok ? "このタブでは振り分けられません" : result.error;
-  };
+  /** 今の時刻（ISO 8601）。操作に入れて渡す（reducer を純粋に保つため） */
+  const stamp = () => new Date().toISOString();
 
   /**
-   * 操作を反映する。できなければ理由を返す（ドメインの関数で確かめ直す。読み取り専用になった直後など、関数の外の理由もある）
+   * 操作を反映する。できなければ理由を返す。理由は、反映に使うのと同じ対応（operate）で確かめ直して得る
+   * （読み取り専用になった直後など、ドメインの関数の外の理由なら refused）。変えるものが無かった（同じ四半期に置き直したなど）ときは、失敗ではない
    */
-  const run = (action: Parameters<typeof store.dispatch>[0], recheck: () => OpResult): string | null => {
-    if (store.dispatch(action)) return null;
-    const result = recheck();
-    if (!result.ok) return result.error;
-    // 変えるものが無かった（同じ四半期に置き直したなど）ときは、失敗ではない
-    return result.state === state ? null : "このタブでは変更できません";
+  const run = (op: Operation, refused = "このタブでは変更できません"): string | null => {
+    if (store.dispatch(op)) return null;
+    const outcome = operate(state, op);
+    if (outcome === null) return refused;
+    if (!outcome.result.ok) return outcome.result.error;
+    return outcome.result.state === state ? null : refused;
   };
+
+  /** 収集箱に入れる。入れられなければ理由を返す */
+  const onCapture = (text: string): string | null =>
+    run({ type: "capture", text, at: stamp(), id: crypto.randomUUID() }, "このタブでは入れられません");
+
+  /** 1件ずつの明確化を確定する。できなければ理由を返す（プロジェクトは最初の一手と合わせて id を2つ使う） */
+  const onClarify = (itemId: string, decision: Decision): string | null =>
+    run({ type: "clarify", itemId, decision, at: stamp(), ids: [crypto.randomUUID(), crypto.randomUUID()] }, "このタブでは振り分けられません");
+
+  /** 一括振り分け。できなければ理由を返す */
+  const onBulk = (itemIds: string[], exit: BulkExit): string | null =>
+    run({ type: "clarifyBulk", itemIds, exit, at: stamp(), ids: itemIds.map(() => crypto.randomUUID()) }, "このタブでは振り分けられません");
 
   /** 置き場の一覧・プロジェクトの詳細の行で使う操作（docs/design.md 3.3） */
   const rowCtx: Omit<RowContext, "showProject"> = {
@@ -165,83 +143,35 @@ export default function App() {
     projects: state.projects,
     now,
     disabledReason: changeBlocked,
-    onEdit: (edit) => {
-      const at = new Date();
-      return run({ type: "editItem", edit, at: at.toISOString() }, () => editItem(state, edit, at));
-    },
-    onComplete: (ref) => {
-      const at = new Date();
-      return run({ type: "completeItem", ref, at: at.toISOString() }, () => completeItem(state, ref, at));
-    },
-    onUncomplete: (ref) => {
-      const at = new Date();
-      return run({ type: "uncompleteItem", ref, at: at.toISOString() }, () => uncompleteItem(state, ref, at));
-    },
-    onDelete: (ref) => run({ type: "deleteItem", ref }, () => deleteItem(state, ref)),
-    onMove: (source, target, input) => {
-      const at = new Date();
-      return run({ type: "moveItem", source, target, input, at: at.toISOString() }, () => moveItem(state, source, target, input, at));
-    },
+    onEdit: (edit) => run({ type: "editItem", edit, at: stamp() }),
+    onComplete: (ref) => run({ type: "completeItem", ref, at: stamp() }),
+    onUncomplete: (ref) => run({ type: "uncompleteItem", ref, at: stamp() }),
+    onDelete: (ref) => run({ type: "deleteItem", ref }),
+    onMove: (source, target, input) => run({ type: "moveItem", source, target, input, at: stamp() }),
   };
 
   /** プロジェクトそのものの操作（docs/design.md 3.6・4.4） */
   const projectHandlers: ProjectHandlers = {
-    onEditProject: (id, input) => {
-      const at = new Date();
-      return run({ type: "editProject", id, input, at: at.toISOString() }, () => editProject(state, id, input, at));
-    },
-    onPlaceProject: (id, placement) => {
-      const at = new Date();
-      return run({ type: "placeProject", id, placement, at: at.toISOString() }, () => placeProject(state, id, placement, at));
-    },
-    onCompleteProject: (id) => {
-      const at = new Date();
-      return run({ type: "completeProject", id, at: at.toISOString() }, () => completeProject(state, id, at));
-    },
-    onUncompleteProject: (id) => {
-      const at = new Date();
-      return run({ type: "uncompleteProject", id, at: at.toISOString() }, () => uncompleteProject(state, id, at));
-    },
-    onDeleteProject: (id, policy) => {
-      const at = new Date();
-      return run({ type: "deleteProject", id, childPolicy: policy, at: at.toISOString() }, () => deleteProject(state, id, policy, at));
-    },
-    onAddAction: (projectId, text) => {
-      const at = new Date();
-      const id = crypto.randomUUID();
-      return run({ type: "addActionToProject", projectId, text, at: at.toISOString(), id }, () => addActionToProject(state, projectId, text, at, () => id));
-    },
-    onAddWaiting: (projectId, input) => {
-      const at = new Date();
-      const id = crypto.randomUUID();
-      return run({ type: "addWaitingToProject", projectId, input, at: at.toISOString(), id }, () => addWaitingToProject(state, projectId, input, at, () => id));
-    },
+    onEditProject: (id, input) => run({ type: "editProject", id, input, at: stamp() }),
+    onPlaceProject: (id, placement) => run({ type: "placeProject", id, placement, at: stamp() }),
+    onCompleteProject: (id) => run({ type: "completeProject", id, at: stamp() }),
+    onUncompleteProject: (id) => run({ type: "uncompleteProject", id, at: stamp() }),
+    onDeleteProject: (id, policy) => run({ type: "deleteProject", id, childPolicy: policy, at: stamp() }),
+    onAddAction: (projectId, text) => run({ type: "addActionToProject", projectId, text, at: stamp(), id: crypto.randomUUID() }),
+    onAddWaiting: (projectId, input) => run({ type: "addWaitingToProject", projectId, input, at: stamp(), id: crypto.randomUUID() }),
   };
 
   /** 年次目標・四半期シートの操作（docs/design.md 3.7） */
   const planHandlers: PlanHandlers = {
-    onSetGoal: (fiscalYear, themeId, text) => {
-      const at = new Date();
-      const id = crypto.randomUUID();
-      return run({ type: "setAnnualGoal", fiscalYear, themeId, text, at: at.toISOString(), id }, () => setAnnualGoal(state, fiscalYear, themeId, text, at, () => id));
-    },
-    onToggleFocus: (fiscalYear, quarter, themeId) => {
-      const at = new Date();
-      const id = crypto.randomUUID();
-      return run({ type: "toggleFocusTheme", fiscalYear, quarter, themeId, at: at.toISOString(), id }, () => toggleFocusTheme(state, fiscalYear, quarter, themeId, at, () => id));
-    },
-    onSetWontDo: (fiscalYear, quarter, text) => {
-      const at = new Date();
-      const id = crypto.randomUUID();
-      return run({ type: "setWontDo", fiscalYear, quarter, text, at: at.toISOString(), id }, () => setWontDo(state, fiscalYear, quarter, text, at, () => id));
-    },
+    onSetGoal: (fiscalYear, themeId, text) => run({ type: "setAnnualGoal", fiscalYear, themeId, text, at: stamp(), id: crypto.randomUUID() }),
+    onToggleFocus: (fiscalYear, quarter, themeId) => run({ type: "toggleFocusTheme", fiscalYear, quarter, themeId, at: stamp(), id: crypto.randomUUID() }),
+    onSetWontDo: (fiscalYear, quarter, text) => run({ type: "setWontDo", fiscalYear, quarter, text, at: stamp(), id: crypto.randomUUID() }),
     onPlaceProject: projectHandlers.onPlaceProject,
   };
 
   const onCreateProject = (input: Parameters<typeof createProject>[1], placement: Parameters<typeof createProject>[2]) => {
-    const at = new Date();
     const id = crypto.randomUUID();
-    const error = run({ type: "createProject", input, placement, at: at.toISOString(), id }, () => createProject(state, input, placement, at, () => id));
+    const error = run({ type: "createProject", input, placement, at: stamp(), id });
     return error === null ? { id } : { error };
   };
 
@@ -318,10 +248,7 @@ export default function App() {
             state={state}
             now={now}
             disabledReason={changeBlocked}
-            onPlace={(id, placement, expectedThemeId) => {
-              const at = new Date();
-              return run({ type: "placeProject", id, placement, expectedThemeId, at: at.toISOString() }, () => placeProject(state, id, placement, at, expectedThemeId));
-            }}
+            onPlace={(id, placement, expectedThemeId) => run({ type: "placeProject", id, placement, expectedThemeId, at: stamp() })}
           />
         );
       default:

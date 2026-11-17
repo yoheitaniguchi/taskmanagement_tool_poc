@@ -557,7 +557,7 @@ interface AppState {
 | `validate.ts` | `validateState(unknown)`、`validateExport(unknown)`、`stateSize(state)`、`LIMITS` | 5.3のすべてのルールと、8.2の検証項目（4.6） |
 | `persistence.ts` | `storageNamespace`、`loadFromStorage`、`saveToStorage`、`clearStorage`、`loadDeviceMeta`、`saveDeviceMeta`、`loadThemePreference`、`saveThemePreference`、`parseExportText`、`serializeExport`、`exportFileName`、`storageUsage`、`getStorageManager`・`requestPersistence`（保存の保護。IMP-07） | 6章。Storage API（`navigator.storage` を含む）に触るのはこのファイルだけ |
 | `transfer.ts` | `isValidDeviceName`（保存・JSONの値の判定）、`validateDeviceName`（入力の正規化と判定）、`validateDeviceMeta`、`stateFingerprint`、`transferStatus(meta, state)`、`importActions(changed, exportBlocked, exportedAt)`（読み込みの確認で出すボタン） | 端末名の許可リスト。「書き出した後の変更があるか」を、書き出し・読み込みのときの状態の指紋と今の状態の比較で出す（6.2）。読み込みの確認で、書き出しのボタンを出すか・主ボタンにするか・置き換えのボタンの名前を、変更の有無・書き出せない理由・書き出した日時から決める（6.2。IMP-08） |
-| `reducer.ts` | `reducer(root, action)` | ドメインの関数を呼ぶだけ。「元に戻す」（`undo`）もここで扱い、任意の状態を置く操作は、検証済みのJSONの読み込み（`replaceState`）と消去（`reset`）だけにする（6.4） |
+| `reducer.ts` | `reducer(root, action)`、`operate`、`commitAction` | ドメインの関数を呼ぶだけ。「元に戻す」（`undo`）もここで扱い、任意の状態を置く操作は、検証済みのJSONの読み込み（`replaceState`）と消去（`reset`）だけにする（6.4）。「操作の種類 → ドメインの関数と『元に戻す』の文言」の対応は `operate` の1か所にだけ書き、reducer（結果を検証してから反映）と画面（反映できなかったときの理由の表示）の両方が使う。`operate` の結果をそのまま状態にしない。`commitAction` は、反映してよいか（読み取り専用のタブでない、受け付けられた）と「変更あり」に数えるかを決める。reducer は操作1回につき `commitAction` で1回だけ呼ぶ（6.3） |
 
 ### 4.6 JSON・localStorageの読み込みでの検証
 
@@ -703,6 +703,7 @@ JSONを読み込みます（今のデータは置き換えられ、元に戻せ�
 既存PoCのやり方（`usePersistedState`・`autosave`）を移して使う。
 
 - ほかのページの枠（iframe）の中で開かれたら、保存データを読む前に止め、アプリの画面を出さずに「このアプリは、ほかのページの中では開けません」とだけ出す（`src/frameGuard.ts`・`src/main.tsx`。クリックジャッキングの対策。SEC-003。GitHub Pages ではヘッダーで止められないため）。確かめられないときも枠の中として扱う
+- 操作は `commitAction`（`reducer.ts`）で反映を決め、計算済みの状態をそのまま画面の状態にする（reducer を操作1回につき1回だけ呼ぶ。2026-11-17、計画 `docs/plans/code-optimization.md` の Q-1）。別のタブの変更を知ったら、その場で読み取り専用にし「元に戻す」を捨てる（次の描画を待たない）
 - 起動時の読込も 4.6 と同じ検証に通す。読めなければ、自動保存を止め、元の値を退避し、空の状態で上書きしない。帯で「保存データを読めませんでした。自動保存を止めています」と、［JSONを読み込む］［読めなかったデータを書き出す］［保存データを消去］を出す
   - ［読めなかったデータを書き出す］は、退避ではなく元のキーの値をそのまま書き出す（`tmpoc-backup-<YYYYMMDD>-<HHMM>.json`）。退避は容量の不足や前の退避があると書けないが、回復するまで元のキーは書き換えないため。退避できなかったときは、帯にその旨を書く
   - 回復するまでの画面の状態は空なので、［書き出す］と確認画面の［今のデータを書き出す］は使えなくし、「書き出し後の変更あり」も出さない（空のファイルを本物のバックアップと誤らないため）
@@ -809,3 +810,4 @@ JSONを読み込みます（今のデータは置き換えられ、元に戻せ�
 | 2026-11-15 | 振り返りの後の改善 PR 14（ホームと一覧）：プロジェクトの一覧とホームの表に「次のアクション（先頭）」の列を足した（3.2・3.6。IMP-01）。ホームの並びを収集箱 → 置き場 → 今の四半期 → 進行中のプロジェクトにし、置き場の件数を小さな枠に、ホームの表の四半期を短い表記にした（3.2・5章。IMP-02） |
 | 2026-11-15 | 振り返りの後の改善 PR 15（Android の表示とフォーカス）：下部のタブの文字を1行にし「メニュー」の位置を揃えた（2.3。IMP-03）。収集の知らせを重ねて出し、上部の固定部分を約20px低くした（3.1。IMP-04）。スマホの幅で入力欄の薄い文字を短くした（3.1。IMP-05。`useMediaQuery`）。フォーカスを移す見出しの枠を出さないようにした（7章。IMP-10） |
 | 2026-11-17 | プログラムの最適化 PR 2（セキュリティ）：枠の中では画面を出さないようにした（6.3。SEC-003）。ESLint で `Reflect` と、`window` などへの変数をキーにした参照を禁じた（6.1。SEC-009）。開発用の依存の eslint・typescript-eslint を上げた（SEC-002）。計画 `docs/plans/code-optimization.md` |
+| 2026-11-17 | プログラムの最適化 PR 3（技術負債と品質）：操作の対応を `operate` の1か所にまとめた（4.5。T-1）。反映を `commitAction` で決め、reducer を操作1回につき1回だけ呼ぶようにした（6.3。Q-1）。`tsconfig.json` に `noImplicitReturns`・`noImplicitOverride` を足した（Q-2）。計画 `docs/plans/code-optimization.md` |
