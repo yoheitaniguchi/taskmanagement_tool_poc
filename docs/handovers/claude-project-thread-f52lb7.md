@@ -1,45 +1,46 @@
-# 引き継ぎ：プログラムの最適化 — PR 2 セキュリティ（S-1〜3）
+# 引き継ぎ：プログラムの最適化 — PR 3 技術負債と品質（T-1・Q-1・Q-2）
 
-- **最終更新日時：** 2026-11-17 14:10（日本時間）
+- **最終更新日時：** 2026-11-17 15:25（日本時間）
 - **最終担当 AI：** Claude Code（実装の担当）
 - **対象ブランチ：** `claude/project-thread-f52lb7`
-- **関連 Issue / PR：** Issue #45、この PR（PR 2）。計画の PR #46 はマージ済みで、その引き継ぎ文書は `docs/handovers/archive/claude-project-thread-f52lb7-pr1.md` に移した（AGENTS.md 6章）
-- **計画：** `docs/plans/code-optimization.md` の S-1・S-2・S-3（2026-11-17 承認。9章の4項目はすべて推奨案）
+- **関連 Issue / PR：** Issue #45、この PR（PR 3）。PR 2（#47）の引き継ぎ文書は `docs/handovers/archive/claude-project-thread-f52lb7-pr2.md` に移した（AGENTS.md 6章）
+- **計画：** `docs/plans/code-optimization.md` の T-1・Q-1・Q-2（2026-11-17 承認）
 
-Claude Code が実装したので、**レビューは別の AI が行います**（AGENTS.md 2章）。画面の見た目と操作は変えていません（枠の中で開いたときだけ、画面の代わりに1行の文言を出す）。
+Claude Code が実装したので、**レビューは別の AI が行います**（AGENTS.md 2章）。画面の見た目・文言・操作は変えていません。
 
 ## 1. 現在のステータス
 
-- [x] S-1：eslint 10.14.0 → 10.15.0、typescript-eslint 8.72.2 → 8.73.0（開発用の依存だけ。PR #44 のマージ後の main から上げた）。`npm audit` と `npm audit --omit=dev` が 0件
-- [x] S-2：枠（iframe）の中で開かれたら、保存データを読む前に止め、画面を出さない（`src/frameGuard.ts`・`src/main.tsx`）。テスト3件（枠の外・枠の中・確かめると例外）。Chromium で、直接開くとふだんどおり、枠の中では文言だけでボタンが0個になることを確かめた
-- [x] S-3：ESLint で `Reflect` と、`window` などへの変数・式をキーにした参照を禁じた。止まる例8件・止まらない例3件（限界の記録）・配列の添字などは使えることのテストを足した
-- [x] 文書：`docs/security/checklist.md` の前提（SEC-003 を解消、残りの2つの手口）、`docs/design.md` 6.1（SEC-009）・6.3（枠の中）・変更の記録、`vite.config.ts` のコメント
-- [x] 型チェック・lint・テスト（367件。うち `@security` 121件）・ビルド・`scripts/check-dist.sh` が通る
+- [x] T-1：「操作の種類 → ドメインの関数と『元に戻す』の文言」の対応を `src/domain/reducer.ts` の `operate` 1か所にまとめた。reducer と `src/App.tsx` の失敗の理由の両方が使う。`App.tsx` は 404行 → 331行
+- [x] Q-1：反映の判定を `commitAction`（`reducer.ts`）に切り出し、`src/state/usePersistedState.ts` を `useReducer` から `useState` に替えた。操作1回で reducer を1回だけ呼ぶ。別のタブの変更を知ったら、その場で読み取り専用にする
+- [x] Q-2：`tsconfig.json` に `noImplicitReturns`・`noImplicitOverride`。違反の2か所（`ErrorBoundary.tsx`）に `override`
+- [x] テストを足した：`operate` の5件（成功の反映、失敗の理由、検証に通らない結果は反映しない、読めない時刻・知らない操作、四半期の移動の文言）、`commitAction` の5件（ふだん、読み取り専用、受け付けられない、変更ありに数えない操作、元に戻す）
+- [x] 型チェック・lint・テスト（377件）・ビルドが通る。Chromium（本番ビルド）で、収集・1件ずつの明確化・元に戻す・別のタブの変更での読み取り専用が今までどおり動き、コンソールのエラーが0件であることを確かめた
 - [ ] **別の AI によるレビュー**（下の4章の観点）
-- [ ] 洋平さんが PR プレビューで、ふだんどおり開けて操作できることを確かめてマージする
-- [ ] 次：PR 3（技術負債と品質：T-1・Q-1・Q-2。手元で作り終えている）→ PR 4（点検と効果の記録）
+- [ ] 洋平さんが PR プレビューで確かめてマージする
+- [ ] 次：PR 4（`/security-review`、効果の前後の比較の記録、説明資料）
 
 ## 2. 設計上の決定事項・前提
 
-- **S-2 の判定**は `window.top !== window.self`。確かめると例外になるときは「枠の中」として扱う（安全な側）。テーマを当てる（保存データを読む）より前に判定する。文言は `textContent` で入れ、HTML として挿入しない
-- **S-2 で防げないもの**（計画 3章、承認済み）：同じオリジンの姉妹アプリからの枠（もともと保存データを直接読めるので、受け入れ済みのリスクの範囲）、ポップアップを使う「ダブルクリック」型のだまし
-- **S-3 の限界**：別名にしてからの参照（`const w = window; w[k]`）、`window.window[k]`、`Object.getOwnPropertyDescriptor` は止まらない。テストに「止まらない例」として書き、止まるようになったら上へ移すようにした。SEC-009 は「小さくした」と記録する（解消ではない）
-- `Reflect` は `no-restricted-globals` に入れたので、`const R = Reflect` のような別名も止まる。`persistence.ts` の上書きの設定にも入れた
+- **`operate` は検証しない**。結果をそのまま状態にしない。状態全体の検証（`validateState`）は今までどおり reducer の `applyResult` と、保存の前（`saveToStorage`）に残した
+- 読み込み・消去・元に戻す・表示の切替は `operate` に入れない（型 `Operation` で除く）。種類を足したら `operate` の `never` で型のエラーになる
+- 変更前の状態から作る文言（四半期の移動、プロジェクトの完了の件数）と、年次目標を消したかの判定（前後の件数）は、移す前と同じ
+- `App.tsx` の `run` は、反映できなかったときに `operate` で理由を得る。文言（「このタブでは入れられません」「振り分けられません」「変更できません」）と、変えるものが無かったときに理由を出さないことは今と同じ（収集・明確化・一括振り分けは成功すれば必ず状態が変わるので、まとめても振る舞いは変わらない）
+- `usePersistedState`：`rootRef` が最新の状態を持ち、`replaceRoot` で ref と画面の状態を同時に置き換える。消去の手順（状態を作る → `skipNextSave` → 置き換える）の順番は変えていない。StrictMode の reducer の2回呼びによる純粋さの点検は無くなるが、reducer は単体テストで純粋さを保っている
 
 ## 3. 主な変更ファイル
 
-- `package.json`・`package-lock.json`：S-1
-- `src/frameGuard.ts`（新規）・`src/frameGuard.test.ts`（新規）・`src/main.tsx`：S-2
-- `eslint.config.js`・`security/eslint-rules.security.test.ts`：S-3
-- `docs/security/checklist.md`・`docs/design.md`・`vite.config.ts`（コメント）：記録
-- `docs/handovers/`：この文書と、PR 1 の引き継ぎ文書の archive
+- `src/domain/reducer.ts`：`operate`・`Operation`・`Outcome`・`commitAction`
+- `src/domain/reducer.test.ts`：上のテスト
+- `src/App.tsx`：操作は `run({ ... })` の1行ずつに
+- `src/state/usePersistedState.ts`：`useState` と `commitAction`
+- `tsconfig.json`・`src/components/ErrorBoundary.tsx`：Q-2
+- `docs/design.md`：4.5 の表（`reducer.ts`）、6.3、変更の記録
 
 ## 4. 次の担当 AI への申し送り・注意点
 
 - **レビューの観点**
-  - S-2：判定が描画と保存データの読み込みより前にあるか。枠の中で押せるものが残らないか。例外のときに安全な側へ倒れるか
-  - S-3：新しい禁止が、今のコード（`src/`・`security/`・テスト）を誤って止めていないか（`npm run lint` が0件）。限界の記述（設計 6.1、テストの「止まらない例」）が正しいか
-  - S-1：`npm audit` が 0件か。lint・テスト・ビルドの結果が変わっていないか
-  - 文書：SEC-002・003・009 の扱いが、計画 9章の承認と合っているか
-- **変えてはいけないもの**：画面の見た目・文言・操作、スキーマ v1、`validateState`。CI の構成
-- **このブランチの事情**：このセッションが push できるのは `claude/project-thread-f52lb7` だけなので、PR 1〜4 は同じブランチ名を順に使う。force-push はせず、前の PR のマージ後に main を取り込んで進める
+  - T-1：`operate` の各 case が、元の reducer の case と同じ関数・引数・文言か（`git diff origin/main -- src/domain/reducer.ts`）。`App.tsx` の各操作が、元と同じ操作の値を作っているか（とくに `placeProject` の2か所、`createProject` の id、明確化の id 2つ）
+  - Q-1：読み取り専用のタブで反映されないこと、読み込み・消去・別のタブの検知で「元に戻す」と自動保存が今と同じに動くこと
+  - 検証の迂回が無いこと：`operate` の結果が状態になる経路は `applyResult` だけか
+- **変えてはいけないもの**：画面の見た目・文言・操作、スキーマ v1、`validateState`。依存・CI
+- **このブランチの事情**：PR 1〜4 は同じブランチ名を順に使う。force-push はせず、前の PR のマージ後に main を取り込んで進める

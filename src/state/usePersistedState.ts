@@ -1,9 +1,9 @@
-// 状態を useReducer で持ち、変わるたびに localStorage へ自動保存する（docs/design.md 6.3。既存PoC のやり方を移したもの）。
+// 状態を持ち（反映は commitAction で決める）、変わるたびに localStorage へ自動保存する（docs/design.md 6.3。既存PoC のやり方を移したもの）。
 // - 起動時に保存データを検証し、読めなければ自動保存を止める（空の状態で上書きしない）。
 //   検証済みのデータを読み込むか、保存データを消去したら再開する
 // - 別のタブで、この名前空間のどれかのキーが変わったら、このタブを読み取り専用にする（黙って上書きしないため）
 // - このブラウザの設定（端末名・書き出しと読み込みの記録）も、ここで読み書きする（読み取り専用のタブでは書かない）
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { shouldAutosave } from "../domain/autosave";
 import {
   clearStorage,
@@ -22,7 +22,7 @@ import {
   requestPersistence,
   type PersistenceStatus,
 } from "../domain/persistence";
-import { initialRoot, reducer, type Action } from "../domain/reducer";
+import { commitAction, initialRoot, reducer, type Action, type Root } from "../domain/reducer";
 import { changedSinceTransfer, emptyDeviceMeta, markChanged, markExported, markImported, stateFingerprint, type DeviceMeta } from "../domain/transfer";
 import { emptyState, type ExportFile } from "../domain/types";
 
@@ -39,9 +39,6 @@ export interface StorageStatus {
   readOnly: boolean;
 }
 
-/** 状態を変えたことに数えない操作（読み込み・消去・表示の切替） */
-const NOT_A_CHANGE: ReadonlySet<Action["type"]> = new Set(["replaceState", "reset", "dismissUndo", "forgetUndo"]);
-
 export function usePersistedState() {
   const [initial] = useState<{ load: LoadResult | null; meta: DeviceMeta }>(() => {
     const storage = getBrowserStorage();
@@ -49,11 +46,15 @@ export function usePersistedState() {
     return { load: loadFromStorage(storage), meta: loadDeviceMeta(storage) };
   });
 
-  const [root, dispatchRaw] = useReducer(reducer, undefined, () =>
-    initialRoot(initial.load?.kind === "ok" ? initial.load.state : emptyState()),
-  );
+  // 状態は、反映を決めた時点で計算済みの値で置く（reducer を操作1回につき1回だけ呼ぶため。useReducer だと React がもう1回呼ぶ）。
+  // rootRef が最新の状態を持ち、続けて操作しても前の操作の結果から計算する
+  const [root, setRoot] = useState<Root>(() => initialRoot(initial.load?.kind === "ok" ? initial.load.state : emptyState()));
   const rootRef = useRef(root);
   rootRef.current = root;
+  const replaceRoot = useCallback((next: Root) => {
+    rootRef.current = next;
+    setRoot(next);
+  }, []);
   const [meta, setMeta] = useState<DeviceMeta>(initial.meta);
   const metaRef = useRef(meta);
   metaRef.current = meta;
@@ -110,12 +111,14 @@ export function usePersistedState() {
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (!isDataKey(e.key)) return;
+      // 次の描画を待たずに、この場で読み取り専用にし「元に戻す」を捨てる（その間の操作を通さないため）
+      readOnlyRef.current = true;
       setReadOnly(true);
-      dispatchRaw({ type: "forgetUndo" });
+      replaceRoot(reducer(rootRef.current, { type: "forgetUndo" }));
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [replaceRoot]);
 
   /** ブラウザの設定を変えて保存する（読み取り専用のタブでは変えない） */
   const updateMeta = useCallback((next: DeviceMeta): boolean => {
@@ -129,32 +132,26 @@ export function usePersistedState() {
   /** 状態を変える。反映したら true（読み取り専用のタブ、またはドメインの関数・検証で受け付けられなかったら false） */
   const dispatch = useCallback(
     (action: Action): boolean => {
-      if (readOnlyRef.current) return false;
-      const before = rootRef.current;
-      const after = reducer(before, action);
-      if (after === before) return false;
-      rootRef.current = after;
-      dispatchRaw(action);
-      if (after.state !== before.state && !NOT_A_CHANGE.has(action.type)) updateMeta(markChanged(metaRef.current, new Date()));
+      const commit = commitAction(rootRef.current, action, readOnlyRef.current);
+      if (commit === null) return false;
+      replaceRoot(commit.root);
+      if (commit.changed) updateMeta(markChanged(metaRef.current, new Date()));
       return true;
     },
-    [updateMeta],
+    [replaceRoot, updateMeta],
   );
 
   /** 読み込んだファイルで置き換える（ファイルは parseExportText で検証済みのもの） */
   const importFile = useCallback(
     (file: ExportFile): boolean => {
-      if (readOnlyRef.current) return false;
-      const before = rootRef.current;
-      const after = reducer(before, { type: "replaceState", state: file.state });
-      if (after === before) return false;
-      rootRef.current = after;
-      dispatchRaw({ type: "replaceState", state: file.state });
+      const commit = commitAction(rootRef.current, { type: "replaceState", state: file.state }, readOnlyRef.current);
+      if (commit === null) return false;
+      replaceRoot(commit.root);
       setRecovered(true);
-      updateMeta(markImported(metaRef.current, file, stateFingerprint(after.state), new Date()));
+      updateMeta(markImported(metaRef.current, file, stateFingerprint(commit.root.state), new Date()));
       return true;
     },
-    [updateMeta],
+    [replaceRoot, updateMeta],
   );
 
   /** 書き出す JSON とファイル名を作り、書き出したことを記録する。端末名が無い・読み取り専用・読めなかった保存データが残っているなら null */
@@ -185,11 +182,11 @@ export function usePersistedState() {
     metaRef.current = empty;
     setMeta(empty);
     setRecovered(true);
-    rootRef.current = reducer(rootRef.current, { type: "reset" });
+    const next = reducer(rootRef.current, { type: "reset" });
     skipNextSave.current = true;
-    dispatchRaw({ type: "reset" });
+    replaceRoot(next);
     return true;
-  }, []);
+  }, [replaceRoot]);
 
   const fingerprint = useMemo(() => stateFingerprint(root.state), [root.state]);
 
