@@ -76,12 +76,20 @@ describe("[@security] ESLint による禁止", () => {
     ["globalThis[k]", "export const r = (k: string) => globalThis[k as keyof typeof globalThis];"],
     ["self[k]", "export const r = (k: string) => self[k as keyof typeof self];"],
     ["parent[k]", "export const r = (k: string) => parent[k as keyof Window];"],
+    // SEC-010 で足した形
+    ['window.Reflect.get(navigator, "storage")', 'export const r = () => window.Reflect.get(navigator, "storage");'],
+    ["globalThis.Reflect", "export const R = globalThis.Reflect;"],
+    ["(window as unknown as Record)[k]", "export const r = (k: string) => (window as unknown as Record<string, unknown>)[k];"],
+    ["(window as Record)[k]", "export const r = (k: string) => (window as never as Record<string, unknown>)[k];"],
+    ["window![k]", "export const r = (k: string) => window![k as keyof Window];"],
+    ["window.navigator[k]", "export const r = (k: string) => window.navigator[k as keyof Navigator];"],
+    ["window.window[k]", "export const r = (k: string) => window.window[k as keyof Window];"],
   ];
-  const DYNAMIC_RULES = ["no-restricted-globals", "no-restricted-syntax"];
+  const DYNAMIC_RULES_ALL = ["no-restricted-globals", "no-restricted-syntax", "no-restricted-properties"];
   for (const [label, code] of dynamicCode) {
     it(`[@security] ${label} は、どのファイルでもエラーになる（SEC-009）`, async () => {
       for (const file of [APP_FILE, PERSISTENCE_FILE]) {
-        expect((await ruleIds(code, file)).some((id) => DYNAMIC_RULES.includes(id))).toBe(true);
+        expect((await ruleIds(code, file)).some((id) => DYNAMIC_RULES_ALL.includes(id))).toBe(true);
       }
     });
   }
@@ -94,8 +102,9 @@ describe("[@security] ESLint による禁止", () => {
   // 構文の検査では止まらない形（限界。レビューで守る。docs/design.md 6.1）。止まるようになったら、ここを直して上へ移す
   const notStopped: [string, string][] = [
     ["const w = window; w[k]", "export const r = (k: string) => { const w: Record<string, unknown> = window as unknown as Record<string, unknown>; return w[k]; };"],
-    ["window.window[k]", "export const r = (k: string) => window.window[k as keyof Window];"],
     ['Object.getOwnPropertyDescriptor(window, "x")', 'export const r = () => Object.getOwnPropertyDescriptor(window, "x");'],
+    ["(0, window)[k]", "export const r = (k: string) => (0, window)[k as keyof Window];"],
+    ["Object.entries(window)", "export const r = () => Object.entries(window);"],
   ];
   for (const [label, code] of notStopped) {
     it(`${label} は、構文の検査では止まらない（限界の記録。SEC-009）`, async () => {
