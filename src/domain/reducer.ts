@@ -108,12 +108,6 @@ export function applyResult(root: Root, result: OpResult, undoMessage: string | 
   return { state: result.state, undo: undoMessage === null ? null : { before: root.state, after: result.state, message: undoMessage } };
 }
 
-/** 時刻を持つ操作：読めない時刻なら何もしない（型の外の値でも例外にしない。SEC-006） */
-function timed(root: Root, at: string, run: (now: Date) => Root): Root {
-  const now = parseAt(at);
-  return now === null ? root : run(now);
-}
-
 /** プロジェクトの完了の「元に戻す」の文言（未完了の子の件数は、完了にする前の状態から数える。docs/design.md 4.4） */
 export function completeProjectMessage(openChildren: number): string {
   return openChildren === 0 ? "プロジェクトを完了にしました" : `プロジェクトと、未完了の${openChildren}件を完了にしました`;
@@ -127,6 +121,97 @@ export function placeMessage(state: AppState, projectId: string, placement: Plac
   return `${quarterLabel(placement.fiscalYear, placement.quarter)}${before === null ? "に置きました" : "に移しました"}`;
 }
 
+/** 状態を変える操作（読み込み・消去・元に戻す・表示の切替を除いたもの）。ドメインの関数を1つ呼ぶ */
+export type Operation = Exclude<Action, { type: "replaceState" | "reset" | "undo" | "dismissUndo" | "forgetUndo" }>;
+
+/** 操作の結果と、「元に戻す」の文言（出さないなら null） */
+export interface Outcome {
+  result: OpResult;
+  undoMessage: string | null;
+}
+
+/** 時刻を持つ操作：読めない時刻なら null（何もしない。型の外の値でも例外にしない。SEC-006） */
+function timed(at: string, run: (now: Date) => Outcome): Outcome | null {
+  const now = parseAt(at);
+  return now === null ? null : run(now);
+}
+
+/**
+ * 「操作の種類 → ドメインの関数と『元に戻す』の文言」の対応（ここ1か所だけに書く。docs/design.md 4.5）。
+ * reducer は結果を検証してから反映し（applyResult）、画面は反映できなかったときの理由を出すのに使う。
+ * ここでは状態全体の検証（validateState）をしない。結果をそのまま状態にしないこと。
+ * 知らない操作・読めない時刻なら null（何もしない。SEC-006）
+ */
+export function operate(state: AppState, op: Operation): Outcome | null {
+  switch (op.type) {
+    case "capture":
+      // 収集は「元に戻す」の対象にしない（docs/design.md 6.4。間違えたら明確化で削除する）
+      return timed(op.at, (now) => ({ result: capture(state, op.text, now, () => op.id), undoMessage: null }));
+    case "clarify":
+      // 明確化のすべての出口の直後に「元に戻す」を出す（D1。収集箱に戻るのは、この「元に戻す」だけ。5.3）
+      return timed(op.at, (now) => ({
+        result: clarify(state, op.itemId, op.decision, now, takeIds(op.ids)),
+        undoMessage: EXIT_MESSAGES[op.decision.exit],
+      }));
+    case "clarifyBulk":
+      return timed(op.at, (now) => ({
+        result: clarifyBulk(state, op.itemIds, op.exit, now, takeIds(op.ids)),
+        undoMessage: bulkMessage(op.exit, op.itemIds.length),
+      }));
+    case "editItem":
+      return timed(op.at, (now) => ({ result: editItem(state, op.edit, now), undoMessage: null }));
+    case "completeItem":
+      return timed(op.at, (now) => ({ result: completeItem(state, op.ref, now), undoMessage: "完了にしました" }));
+    case "uncompleteItem":
+      return timed(op.at, (now) => ({ result: uncompleteItem(state, op.ref, now), undoMessage: null }));
+    case "deleteItem":
+      return { result: deleteItem(state, op.ref), undoMessage: "削除しました" };
+    case "createProject":
+      return timed(op.at, (now) => ({ result: createProject(state, op.input, op.placement, now, () => op.id), undoMessage: null }));
+    case "editProject":
+      return timed(op.at, (now) => ({ result: editProject(state, op.id, op.input, now), undoMessage: null }));
+    case "placeProject":
+      // 文言は、移す前の状態から作る（「置きました」と「移しました」を分けるため）
+      return timed(op.at, (now) => ({
+        result: placeProject(state, op.id, op.placement, now, op.expectedThemeId),
+        undoMessage: placeMessage(state, op.id, op.placement),
+      }));
+    case "completeProject":
+      // 未完了の子の件数は、完了にする前の状態から数える（docs/design.md 4.4）
+      return timed(op.at, (now) => ({ result: completeProject(state, op.id, now), undoMessage: completeProjectMessage(openChildCount(state, op.id)) }));
+    case "uncompleteProject":
+      return timed(op.at, (now) => ({ result: uncompleteProject(state, op.id, now), undoMessage: null }));
+    case "deleteProject":
+      return timed(op.at, (now) => ({ result: deleteProject(state, op.id, op.childPolicy, now), undoMessage: null }));
+    case "addActionToProject":
+      return timed(op.at, (now) => ({ result: addActionToProject(state, op.projectId, op.text, now, () => op.id), undoMessage: null }));
+    case "addWaitingToProject":
+      return timed(op.at, (now) => ({ result: addWaitingToProject(state, op.projectId, op.input, now, () => op.id), undoMessage: null }));
+    case "moveItem":
+      return timed(op.at, (now) => ({
+        result: moveItem(state, op.source, op.target, op.input, now),
+        undoMessage: `${PLACE_LABELS[op.target] ?? ""}に移しました`,
+      }));
+    case "setAnnualGoal":
+      return timed(op.at, (now) => {
+        const result = setAnnualGoal(state, op.fiscalYear, op.themeId, op.text, now, () => op.id);
+        // 消えたかどうかは前後の件数で見る（文章を長く書いた年次目標を誤って消しても救えるように）
+        const removed = result.ok && result.state.annualGoals.length < state.annualGoals.length;
+        return { result, undoMessage: removed ? "年次目標を消しました" : null };
+      });
+    case "toggleFocusTheme":
+      return timed(op.at, (now) => ({ result: toggleFocusTheme(state, op.fiscalYear, op.quarter, op.themeId, now, () => op.id), undoMessage: null }));
+    case "setWontDo":
+      return timed(op.at, (now) => ({ result: setWontDo(state, op.fiscalYear, op.quarter, op.text, now, () => op.id), undoMessage: null }));
+    default: {
+      // 操作の種類を足したら、ここで型のエラーになる（対応の書き漏れを防ぐ）。実行時に知らない操作が来たら何もしない（SEC-006）
+      const unknownOp: never = op;
+      void unknownOp;
+      return null;
+    }
+  }
+}
+
 export function reducer(root: Root, action: Action): Root {
   switch (action.type) {
     case "replaceState": {
@@ -135,63 +220,6 @@ export function reducer(root: Root, action: Action): Root {
     }
     case "reset":
       return { state: emptyState(), undo: null };
-    case "capture":
-      // 収集は「元に戻す」の対象にしない（docs/design.md 6.4。間違えたら明確化で削除する）
-      return timed(root, action.at, (now) => applyResult(root, capture(root.state, action.text, now, () => action.id), null));
-    case "clarify":
-      // 明確化のすべての出口の直後に「元に戻す」を出す（D1。収集箱に戻るのは、この「元に戻す」だけ。5.3）
-      return timed(root, action.at, (now) =>
-        applyResult(root, clarify(root.state, action.itemId, action.decision, now, takeIds(action.ids)), EXIT_MESSAGES[action.decision.exit]),
-      );
-    case "clarifyBulk":
-      return timed(root, action.at, (now) =>
-        applyResult(
-          root,
-          clarifyBulk(root.state, action.itemIds, action.exit, now, takeIds(action.ids)),
-          bulkMessage(action.exit, action.itemIds.length),
-        ),
-      );
-    case "editItem":
-      return timed(root, action.at, (now) => applyResult(root, editItem(root.state, action.edit, now), null));
-    case "completeItem":
-      return timed(root, action.at, (now) => applyResult(root, completeItem(root.state, action.ref, now), "完了にしました"));
-    case "uncompleteItem":
-      return timed(root, action.at, (now) => applyResult(root, uncompleteItem(root.state, action.ref, now), null));
-    case "deleteItem":
-      return applyResult(root, deleteItem(root.state, action.ref), "削除しました");
-    case "createProject":
-      return timed(root, action.at, (now) => applyResult(root, createProject(root.state, action.input, action.placement, now, () => action.id), null));
-    case "editProject":
-      return timed(root, action.at, (now) => applyResult(root, editProject(root.state, action.id, action.input, now), null));
-    case "placeProject":
-      return timed(root, action.at, (now) =>
-        applyResult(root, placeProject(root.state, action.id, action.placement, now, action.expectedThemeId), placeMessage(root.state, action.id, action.placement)),
-      );
-    case "completeProject":
-      return timed(root, action.at, (now) => applyResult(root, completeProject(root.state, action.id, now), completeProjectMessage(openChildCount(root.state, action.id))));
-    case "uncompleteProject":
-      return timed(root, action.at, (now) => applyResult(root, uncompleteProject(root.state, action.id, now), null));
-    case "deleteProject":
-      return timed(root, action.at, (now) => applyResult(root, deleteProject(root.state, action.id, action.childPolicy, now), null));
-    case "addActionToProject":
-      return timed(root, action.at, (now) => applyResult(root, addActionToProject(root.state, action.projectId, action.text, now, () => action.id), null));
-    case "addWaitingToProject":
-      return timed(root, action.at, (now) => applyResult(root, addWaitingToProject(root.state, action.projectId, action.input, now, () => action.id), null));
-    case "moveItem":
-      return timed(root, action.at, (now) =>
-        applyResult(root, moveItem(root.state, action.source, action.target, action.input, now), `${PLACE_LABELS[action.target] ?? ""}に移しました`),
-      );
-    case "setAnnualGoal":
-      return timed(root, action.at, (now) => {
-        const result = setAnnualGoal(root.state, action.fiscalYear, action.themeId, action.text, now, () => action.id);
-        // 消えたかどうかは前後の件数で見る（文章を長く書いた年次目標を誤って消しても救えるように）
-        const removed = result.ok && result.state.annualGoals.length < root.state.annualGoals.length;
-        return applyResult(root, result, removed ? "年次目標を消しました" : null);
-      });
-    case "toggleFocusTheme":
-      return timed(root, action.at, (now) => applyResult(root, toggleFocusTheme(root.state, action.fiscalYear, action.quarter, action.themeId, now, () => action.id), null));
-    case "setWontDo":
-      return timed(root, action.at, (now) => applyResult(root, setWontDo(root.state, action.fiscalYear, action.quarter, action.text, now, () => action.id), null));
     case "undo":
       // 今の状態が、覚えておいた直後の状態と同じオブジェクトのときだけ戻す（ほかの変更が挟まっていたら戻さない）
       if (root.undo === null || root.state !== root.undo.after) return { ...root, undo: null };
@@ -199,8 +227,10 @@ export function reducer(root: Root, action: Action): Root {
     case "dismissUndo":
     case "forgetUndo":
       return root.undo === null ? root : { ...root, undo: null };
-    default:
-      // 知らない操作は何もしない（SEC-006）
-      return root;
+    default: {
+      // 状態を変える操作は、ドメインの関数の結果を検証してから反映する。知らない操作は何もしない（SEC-006）
+      const outcome = operate(root.state, action);
+      return outcome === null ? root : applyResult(root, outcome.result, outcome.undoMessage);
+    }
   }
 }
